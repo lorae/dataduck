@@ -1,0 +1,4 @@
+bucket_name,lower_bound,upper_bound,specific_value
+r00_49,0,50,NA
+r50plus,50,200,NA
+r25yo,NA,NA,25

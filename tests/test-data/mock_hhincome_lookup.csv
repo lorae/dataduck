@@ -1,0 +1,5 @@
+bucket_name,lower_bound,upper_bound,specific_value
+negative,-Inf,0,NA
+r000_100k,0,100000,NA
+r100kplus,100000,9999999,NA
+N/A,NA,NA,9999999
