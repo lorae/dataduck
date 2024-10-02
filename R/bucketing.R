@@ -7,11 +7,20 @@
 # Proof-of-concept matching ranges in a lookup table using non-database data
 # https://stackoverflow.com/questions/75629990/lookup-table-in-r-by-matching-ranges
 
-# TODO: Roxygen documentation
-# A function for bucketing data based on a simple range-based lookup table.
-# Returns the input data with an appended column named `output_column`.
-# Ranges are inclusive on the bottom end and exclusive on the top end.
-# The lookup table must have colnames (bucket_name, lower_bound, upper_bound)
+#' Bucket Data Based on Ranges in a Lookup Table
+#'
+#' This function creates custom buckets for continuous variables based on a range-based lookup table.
+#' It appends a new column to the input data with the assigned bucket for each row.
+#' The lookup table must have columns: `bucket_name`, `lower_bound`, and `upper_bound`.
+#'
+#' @param data A dataframe, tibble, or db object containing the input data to be bucketed.
+#' @param lookup A dataframe, tibble, or db object containing the lookup table with bucket ranges.
+#' @param input_column The name of the column in `data` to be bucketed.
+#' @param output_column The name of the output column. Default is `{input_column}_bucket`.
+#'
+#' @return A dataframe, tibble, or db object with an additional column for the assigned bucket.
+#'
+#' @export
 range_match_lookup <- function(
     data, # A dataframe, tibble, or db object containing the data
     lookup, # A dataframe, tibble, or db object containing the lookup table
@@ -23,6 +32,11 @@ range_match_lookup <- function(
   # That will be fun math problem to solve.
   # TODO: build in check that colnames match. Add warning if any extra columns in lookup table and say
   # that they will be unused, listing the colnames.
+  
+  # A function for bucketing data based on a simple range-based lookup table.
+  # Returns the input data with an appended column named `output_column`.
+  # Ranges are inclusive on the bottom end and exclusive on the top end.
+  # The lookup table must have colnames (bucket_name, lower_bound, upper_bound)
   
   # Rename the output_column  to default, if set to null
   if(is.null(output_column)) {
@@ -52,7 +66,19 @@ range_match_lookup <- function(
   return(result)
 }
 
-
+#' Join Two Datasets on an ID Column with Prioritization
+#'
+#' This function joins two datasets by a common ID column. For a specified column, it prioritizes
+#' values from one dataset over the other. It removes duplicate columns from the output.
+#'
+#' @param data1 The deprioritized dataset.
+#' @param data2 The prioritized dataset.
+#' @param column The name of the column to prioritize and join on.
+#' @param id The name of the column uniquely identifying observations.
+#'
+#' @return A dataframe with the joined data and the `column` prioritized from `data2`.
+#'
+#' @export
 join_columns <- function(
     data1,   # The deprioritized dataset
     data2,   # The prioritized dataset
@@ -81,7 +107,19 @@ join_columns <- function(
   return(result)
 }
 
-
+#' Bucket Data Based on Specific Values in a Lookup Table
+#'
+#' This function creates custom buckets for categorical variables based on a value-based lookup table.
+#' It appends a new column to the input data with the assigned bucket for each row.
+#'
+#' @param data A dataframe, tibble, or db object containing the input data to be bucketed.
+#' @param lookup A dataframe, tibble, or db object containing the lookup table with specific values.
+#' @param input_column The name of the column in `data` to be bucketed.
+#' @param output_column The name of the output column. Default is `{input_column}_bucket`.
+#'
+#' @return A dataframe, tibble, or db object with an additional column for the assigned bucket.
+#'
+#' @export
 value_match_lookup <- function(
     data, # A dataframe, tibble, or db object containing the data
     lookup, # A dataframe, tibble, or db object containing the lookup table
@@ -107,21 +145,31 @@ value_match_lookup <- function(
   return(result)
 }
 
-
-# A function that reads a lookup table from a csv file path and splits it into 
-# a list with two attributes: 
-# $value - a tibble containing a value lookup table. This table can be fed directly
-# as the `lookup` argument in value_match_lookup()
-# $range - a tibble containing the range lookup table. This table can be fed directly
-# as the `lookup` argument in range_match_lookup()
-# The source lookup table must have four columns:
-# bucket_name
-# lower_bound
-# upper_bound
-# specific_value
+#' Split a Lookup Table into Range-Based and Value-Based Components
+#'
+#' This function reads a lookup table from a CSV file and splits it into two components: one for
+#' value-based lookups and one for range-based lookups.
+#'
+#' @param filepath The path to the CSV file containing the lookup table.
+#'
+#' @return A list with two tibbles: `$value` for value-based lookups, and `$range` for range-based lookups.
+#'
+#' @export
 split_lookup_table <- function(
     filepath # Path to the .csv file
 ) {
+  # A function that reads a lookup table from a csv file path and splits it into 
+  # a list with two attributes: 
+  # $value - a tibble containing a value lookup table. This table can be fed directly
+  # as the `lookup` argument in value_match_lookup()
+  # $range - a tibble containing the range lookup table. This table can be fed directly
+  # as the `lookup` argument in range_match_lookup()
+  # The source lookup table must have four columns:
+  # bucket_name
+  # lower_bound
+  # upper_bound
+  # specific_value
+  
   # Read the CSV file into a tibble
   lookup_raw <- read_csv(filepath, show_col_types = FALSE)
   
@@ -144,10 +192,20 @@ split_lookup_table <- function(
   return(lookup_processed)
 }
 
-
-# Function adding a bucketed column to a database (referenced, optionally,
-# through a lazy database reference) using value and range lookup rules specified
-# in a lookup table CSV.
+#' Append a Bucketed Column to a Database Table Based on a Lookup Table
+#'
+#' This function adds a new bucketed column to a database table using a range-based or value-based lookup table.
+#' The lookup table is provided as a CSV file, and the function splits the lookup table into value and range components.
+#'
+#' @param con A database connection.
+#' @param filepath The path to the lookup table CSV file.
+#' @param data A lazy database reference to the input data.
+#' @param input_column The column to be bucketed/matched.
+#' @param id_column The unique ID column in the data.
+#'
+#' @return A lazy database reference with the appended bucketed column.
+#'
+#' @export
 append_bucket_column <- function(
     con,             # Database connection
     filepath,        # Path to the lookup table CSV file
@@ -155,6 +213,11 @@ append_bucket_column <- function(
     input_column,    # The column to be bucketed/matched
     id_column        # The unique ID column
 ) {
+  
+  # Function adding a bucketed column to a database (referenced, optionally,
+  # through a lazy database reference) using value and range lookup rules specified
+  # in a lookup table CSV.
+  
   # Step 1: Split the lookup table into range and value components
   lookup_tb <- split_lookup_table(filepath)
   
@@ -192,10 +255,21 @@ append_bucket_column <- function(
 }
 
 
-# The purpose of this function is to take inputs from the RACE_bucket and
-# HISPAN_bucket columns as defined in the race_buckets00 and hispan_buckets00
-# lookup files and use them to generate a joint race/ethnicity column.
+#' Create a Joint Race/Ethnicity Bucket
+#'
+#' This function combines the `RACE_bucket` and `HISPAN_bucket` columns to generate a new joint
+#' `RACE_ETH_bucket` column.
+#'
+#' @param data A dataframe or database table with `RACE_bucket` and `HISPAN_bucket` columns.
+#'
+#' @return A dataframe or database table with an additional `RACE_ETH_bucket` column.
+#'
+#' @export
 race_eth_bucket <- function(data) {
+  
+  # The purpose of this function is to take inputs from the RACE_bucket and
+  # HISPAN_bucket columns as defined in the race_buckets00 and hispan_buckets00
+  # lookup files and use them to generate a joint race/ethnicity column.
   
   # Check if the RACE_bucket and HISPAN_bucket columns exist in the data frame or database table
   if (!("RACE_bucket" %in% colnames(data))) {
