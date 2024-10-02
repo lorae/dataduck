@@ -11,9 +11,6 @@ library("dplyr")
 root <- find_root(is_rstudio_project)
 setwd(root)
 
-# Source the function being tested
-source("src/utils/aggregation-tools.R")
-
 # Unit test for calculate_weighted_mean function
 test_that("weighted_mean produces correct results", {
   

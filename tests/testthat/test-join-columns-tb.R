@@ -6,9 +6,6 @@ library("rprojroot")
 root <- find_root(is_rstudio_project)
 setwd(root)
 
-# Source the function being tested
-source("src/utils/bucketing-tools.R")
-
 test_that("join_columns works with tibbles in R memory", {
   
   # Create sample data for data1

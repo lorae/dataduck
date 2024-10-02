@@ -6,9 +6,6 @@ library("rprojroot")
 root <- find_root(is_rstudio_project)
 setwd(root)
 
-# Source the function being tested
-source("src/utils/bucketing-tools.R")
-
 test_that("range_match_lookup works with a tibble in R memory", {
   
   # Create synthetic data

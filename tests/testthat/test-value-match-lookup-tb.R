@@ -6,9 +6,6 @@ library("rprojroot")
 root <- find_root(is_rstudio_project)
 setwd(root)
 
-# Source the function being tested
-source("src/utils/bucketing-tools.R")
-
 test_that("value_match_lookup works with tibbles in R memory", {
   
   # Create sample data

@@ -10,9 +10,6 @@ library("rprojroot")
 root <- find_root(is_rstudio_project)
 setwd(root)
 
-# Source the function being tested
-source("src/utils/aggregation-tools.R")
-
 # ----- Step 1: Create test inputs ----- #
 
 # Test tibble inputs
