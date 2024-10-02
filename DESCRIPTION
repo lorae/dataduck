@@ -1,12 +1,16 @@
 Package: dataduck
-Title: What the Package Does (One Line, Title Case)
+Title: Tools for Data Bucketing, Aggregation, and Validation Optimized for Databases
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
+    person("Lorae", "Stojanovic", , "stojanovic.lorae@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Description: Provides functions for data bucketing using lookup tables, data aggregation, and validation, 
+    with a specific focus on optimizing performance when working with databases like DuckDB. The package
+    includes tools for creating custom buckets of continuous or categorical variables, calculating weighted
+    means, and producing simple visualizations using `ggplot2`.
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.0.0
+Suggests: 
+    testthat
