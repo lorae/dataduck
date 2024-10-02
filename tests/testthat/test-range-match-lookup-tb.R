@@ -10,7 +10,7 @@ test_that("range_match_lookup works with a tibble in R memory", {
   
   # Create synthetic data
   raw_tb <- tibble(
-    AGE = c(15, 18, 25, 40, 60)
+    AGE = c(15, 18, 18.1, 17.9, 25, 40, 60)
   )
 
   # Create the lookup table
@@ -29,8 +29,8 @@ test_that("range_match_lookup works with a tibble in R memory", {
   
   # Expected result
   expected_tb <- tibble(
-    AGE = c(15, 18, 25, 40, 60),
-    AGE_bucket = c("Under 18", "18-34", "18-34", "35-49", "Over 50")
+    AGE = c(15, 18, 18.1, 17.9, 25, 40, 60),
+    AGE_bucket = c("Under 18", "18-34", "18-34", "Under 18", "18-34", "35-49", "Over 50")
   )
   
   # Assert that the output matches the expected result
