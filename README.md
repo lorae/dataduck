@@ -5,6 +5,6 @@ An R package providing tools for data bucketing with lookup tables, aggregation,
 
 Tests are located in the `tests/testthat` folder. To run all tests:
 ```r
-library("testthat")
-test_dir("tests/testthat/")
+library("devtools")
+devtools::test()
 ```
