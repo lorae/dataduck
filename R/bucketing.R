@@ -51,18 +51,17 @@ range_match_lookup <- function(
       mutate(!!sym(output_column) := NA)
     
   } else {
-    
-  result <- data |>
-    # For every unique row of data, a new row is generated combining it with the lookup table
-    cross_join(lookup) |>
-    # Then only the rows of the lookup table that match the specified data are kept.
-    # Note that this logic means that if the lookup table has overlapping ranges 
-    # that both match the data, it will produce duplicate entries for the same individual.
-    filter(!!sym(input_column) >= lower_bound & !!sym(input_column) < upper_bound) |>
-    select(-lower_bound, -upper_bound) |> # Clean up extra columns
-    rename(!!sym(output_column) := bucket_name)
+    result <- data |>
+      dplyr::inner_join(
+        lookup,
+        by = dplyr::join_by(
+          (!!rlang::sym(input_column)) >= lower_bound,
+          (!!rlang::sym(input_column)) < upper_bound
+        )
+      ) |>
+      dplyr::select(-lower_bound, -upper_bound) |>
+      dplyr::rename({{ output_column }} := bucket_name)
   }
-  
   return(result)
 }
 
