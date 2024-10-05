@@ -1,6 +1,6 @@
 create_sql_query <- function(
     lookup_table,
-    col = "AGE"
+    col # Must be a string
 ) {
   # Set the name for the new column based on the input col argument
   new_col <- paste0(col, "_bucket")
@@ -23,7 +23,8 @@ FROM
         apply(lookup_table, 1, function(row) {
           # Use the upper and lower bounds directly from the table
           paste0("SELECT '", row["bucket_name"], "' AS bucket_name, ", 
-                 row["lower_bound"], " AS lower_bound, ", row["upper_bound"], " AS upper_bound")
+                 row["lower_bound"], " AS lower_bound, ", 
+                 row["upper_bound"], " AS upper_bound")
         }), 
         collapse = "\n    UNION ALL\n    "
       ),
@@ -49,4 +50,3 @@ FROM
   
   return(query)
 }
-
