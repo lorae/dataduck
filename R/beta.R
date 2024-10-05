@@ -1,5 +1,5 @@
 create_sql_query <- function(
-    lookup_table  # This is the input tibble or data frame
+    lookup_table
 ) {
   # If there are no range-based lookup rules...
   if (nrow(lookup_table) == 0) {
@@ -11,15 +11,15 @@ SELECT
 FROM 
     ipums_bucketed AS data;"
   } else {
+    # If the lookup table has at least one row...
     # Create the SQL query dynamically based on the input lookup table
     lookup_sql <- paste0(
       "WITH age_buckets AS (\n    ",
       paste(
         apply(lookup_table, 1, function(row) {
-          # Handle infinite upper bound by using NULL in SQL
-          upper_bound <- ifelse(is.infinite(row["upper_bound"]), "NULL", row["upper_bound"])
+          # Use the upper and lower bounds directly from the table
           paste0("SELECT '", row["bucket_name"], "' AS bucket_name, ", 
-                 row["lower_bound"], " AS lower_bound, ", upper_bound, " AS upper_bound")
+                 row["lower_bound"], " AS lower_bound, ", row["upper_bound"], " AS upper_bound")
         }), 
         collapse = "\n    UNION ALL\n    "
       ),
@@ -45,3 +45,4 @@ FROM
   
   return(query)
 }
+
