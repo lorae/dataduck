@@ -29,8 +29,8 @@ lookup_empty_tb <- tibble::tibble(
 test_con <- dbConnect(duckdb::duckdb(), ":memory:")
 
 # ----- Step 2: Define helper functions ----- #
-devtools::load_all("../dataduck")
 
+devtools::load_all("../dataduck")
 
 # ----- Step 3: Unit tests ----- #
 
@@ -51,7 +51,7 @@ test_that("create_sql_query produces proper query based on lookup table", {
 -- Applying the lookup table to the AGE column
 SELECT 
     data.*, 
-    COALESCE(bucket_name, 'Unknown') AS AGE_bucketed
+    COALESCE(bucket_name, 'Unknown') AS AGE_bucket
 FROM 
     ipums_bucketed AS data
 LEFT JOIN 
@@ -77,7 +77,7 @@ test_that("create_sql_query produces proper query when given empty lookup table"
   expected_string <- "
 SELECT 
     data.*, 
-    NULL AS AGE_bucketed 
+    NULL AS AGE_bucket
 FROM 
     ipums_bucketed AS data;
 "
