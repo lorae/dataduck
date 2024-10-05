@@ -37,7 +37,7 @@ devtools::load_all("../dataduck")
 test_that("create_sql_query produces proper query based on lookup table", {
   
   expected_string <- "
-  WITH age_buckets AS (
+  WITH buckets AS (
     SELECT 'Under 16' AS bucket_name, 0 AS lower_bound, 16 AS upper_bound
     UNION ALL
     SELECT '16-17' AS bucket_name, 16 AS lower_bound, 18 AS upper_bound
@@ -55,10 +55,10 @@ SELECT
 FROM 
     ipums_bucketed AS data
 LEFT JOIN 
-    age_buckets
+    buckets
 ON 
-    data.AGE >= age_buckets.lower_bound 
-    AND (data.AGE < age_buckets.upper_bound OR age_buckets.upper_bound IS NULL);
+    data.AGE >= buckets.lower_bound 
+    AND (data.AGE < buckets.upper_bound OR buckets.upper_bound IS NULL);
 "
 
 output_string <- create_sql_query(lookup_table = lookup_tb)

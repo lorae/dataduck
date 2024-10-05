@@ -18,7 +18,7 @@ FROM
     # If the lookup table has at least one row...
     # Create the SQL query dynamically based on the input lookup table
     lookup_sql <- paste0(
-      "WITH age_buckets AS (\n    ",
+      "WITH buckets AS (\n    ",
       paste(
         apply(lookup_table, 1, function(row) {
           # Use the upper and lower bounds directly from the table
@@ -40,10 +40,10 @@ FROM
       "FROM\n",
       "    ipums_bucketed AS data\n",
       "LEFT JOIN\n",
-      "    age_buckets\n",
+      "    buckets\n",
       "ON\n",
-      "    data.", col, " >= age_buckets.lower_bound\n",
-      "    AND (data.", col, " < age_buckets.upper_bound OR age_buckets.upper_bound IS NULL);"
+      "    data.", col, " >= buckets.lower_bound\n",
+      "    AND (data.", col, " < buckets.upper_bound OR buckets.upper_bound IS NULL);"
     )
   }
   
