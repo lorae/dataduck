@@ -119,8 +119,8 @@ write_sql_query <- function(
     
   # Construct the final SQL query, inserting the generated logic into the CASE statement
   query <- glue::glue(
-    "ALTER TABLE {table}
-    ADD {new_col} AS (
+    "ALTER TABLE {table} ADD COLUMN {new_col} TEXT;
+    UPDATE {table} SET {new_col} = (
       CASE
         -- Value-based bucketing logic
         {value_logic}
