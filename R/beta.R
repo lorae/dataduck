@@ -1,4 +1,5 @@
-# Function to write a single SQL fragment for a value-based lookup
+# Function which translates a single line of bucketing logic from a value lookup
+# table into a single line of SQL code
 write_sql_fragment_value <- function(i, lookup_table, col) {
 
   bucket_name <- lookup_table$bucket_name[i]
@@ -14,7 +15,8 @@ write_sql_fragment_value <- function(i, lookup_table, col) {
   return(fragment)
 }
 
-# Function to write a single SQL fragment for a range-based lookup
+# Function which translates a single line of bucketing logic from a range lookup
+# table into a single line of SQL code
 write_sql_fragment_range <- function(i, lookup_table, col) {
 
   bucket_name <- lookup_table$bucket_name[i]
@@ -51,9 +53,12 @@ write_sql_query <- function(
   if (nrow(value_lookup_table) == 0) {
     value_logic <- "-- None specified"
   } else {
+    # Translate each line of the lookup table into SQL code expressing the 
+    # bucketing logic
     value_logic <- lapply(
-      seq_len(nrow(value_lookup_table)),
+      seq_len(value_lookup_table |> nrow()),
       write_sql_fragment_value,
+      # Arguments for `write_sql_fragment_value()`
       lookup_table = value_lookup_table,
       col = col
     ) |> 
@@ -65,9 +70,12 @@ write_sql_query <- function(
   if (nrow(range_lookup_table) == 0) {
     range_logic <- "-- None specified"
   } else {
+    # Translate each line of the lookup table into SQL code expressing the 
+    # bucketing logic
     range_logic <- lapply(
-      seq_len(nrow(range_lookup_table)),
+      seq_len(range_lookup_table |> nrow()),
       write_sql_fragment_range,
+      # Arguments for `write_sql_fragment_range()`
       lookup_table = range_lookup_table,
       col = col
     ) |> 
