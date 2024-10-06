@@ -9,7 +9,7 @@ library("rprojroot")
 root <- find_root(is_rstudio_project)
 setwd(root)
 
-# Load your package (assuming create_sql_query is part of `dataduck`)
+# Load your package (assuming write_sql_query is part of `dataduck`)
 devtools::load_all("../dataduck")
 
 # ----- Step 1: Create test inputs ----- #
@@ -42,7 +42,7 @@ value_test_empty <- tibble::tibble(
 
 # ----- Step 2: Unit test ----- #
 
-test_that("create_sql_query produces correct SQL for nonempty value and range lookup tables", {
+test_that("write_sql_query produces correct SQL for nonempty value and range lookup tables", {
   
   expected_string <- "
   ALTER TABLE ipums_bucketed
@@ -61,7 +61,7 @@ test_that("create_sql_query produces correct SQL for nonempty value and range lo
     END
   );"
   
-  output_string <- create_sql_query(
+  output_string <- write_sql_query(
     range_lookup_table = range_test,
     value_lookup_table = value_test,
     col = "AGE",
@@ -77,7 +77,7 @@ test_that("create_sql_query produces correct SQL for nonempty value and range lo
   
 })
 
-test_that("create_sql_query produces correct SQL for nonempty value and empty range lookup tables", {
+test_that("write_sql_query produces correct SQL for nonempty value and empty range lookup tables", {
   
   expected_string <- "
   ALTER TABLE ipums_bucketed
@@ -92,7 +92,7 @@ test_that("create_sql_query produces correct SQL for nonempty value and empty ra
     END
   );"
   
-  output_string <- create_sql_query(
+  output_string <- write_sql_query(
     range_lookup_table = range_test_empty,
     value_lookup_table = value_test,
     col = "AGE",
@@ -108,7 +108,7 @@ test_that("create_sql_query produces correct SQL for nonempty value and empty ra
   
 })
 
-test_that("create_sql_query produces correct SQL for empty value and nonempty range lookup tables", {
+test_that("write_sql_query produces correct SQL for empty value and nonempty range lookup tables", {
   
   expected_string <- "
   ALTER TABLE ipums_bucketed
@@ -126,7 +126,7 @@ test_that("create_sql_query produces correct SQL for empty value and nonempty ra
     END
   );"
   
-  output_string <- create_sql_query(
+  output_string <- write_sql_query(
     range_lookup_table = range_test,
     value_lookup_table = value_test_empty,
     col = "AGE",
@@ -142,17 +142,17 @@ test_that("create_sql_query produces correct SQL for empty value and nonempty ra
   
 })
 
-test_that("create_sql_query throws an error when both value and range lookup tables are empty", {
+test_that("write_sql_query throws an error when both value and range lookup tables are empty", {
   
   # Expect an error when both lookup tables are empty
   expect_error(
-    create_sql_query(
+    write_sql_query(
       range_lookup_table = range_test_empty,
       value_lookup_table = value_test_empty,
       col = "AGE",
       table = "ipums_bucketed"
     ),
-    regexp = "Cannot create SQL query. Both range_lookup_table and value_lookup_table have no rows."
+    regexp = "Cannot write SQL query. Both range_lookup_table and value_lookup_table have no rows."
   )
   
 })

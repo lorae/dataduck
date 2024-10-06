@@ -29,7 +29,7 @@ write_sql_fragment_range <- function(i, lookup_table, col) {
 }
 
 # Main function to create a full SQL query incorporating both value and range-based logic
-create_sql_query <- function(
+write_sql_query <- function(
     range_lookup_table,
     value_lookup_table,
     col,   # Must be a string
@@ -42,7 +42,7 @@ create_sql_query <- function(
   # Verify that at least one of the lookup tables is nonempty before proceeding
   if (nrow(value_lookup_table) == 0 & nrow(range_lookup_table) == 0) {
     stop(paste(
-    "Cannot create SQL query. Both range_lookup_table and value_lookup_table",
+    "Cannot write SQL query. Both range_lookup_table and value_lookup_table",
     "have no rows."
     ))
   }
