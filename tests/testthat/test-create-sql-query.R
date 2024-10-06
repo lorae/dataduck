@@ -14,17 +14,30 @@ devtools::load_all("../dataduck")
 
 # ----- Step 1: Create test inputs ----- #
 
-# Define the range lookup table
+# Define the range lookup table (non-empty)
 range_test <- tibble::tibble(
   bucket_name = c("Under 16", "16-17", "18-22", "23-29", "30+"),
   lower_bound = c(0, 16, 18, 23, 30),
   upper_bound = c(16, 18, 23, 30, 200)
 )
 
-# Define the value lookup table
+# Define the value lookup table (non-empty)
 value_test <- tibble::tibble(
   bucket_name = c("Exactly 25", "Exactly 100"),
   specific_value = c(25, 100)
+)
+
+# Define the empty range lookup table
+range_test_empty <- tibble::tibble(
+  bucket_name = character(),
+  lower_bound = logical(),
+  upper_bound = logical()
+)
+
+# Define the empty value lookup table
+value_test_empty <- tibble::tibble(
+  bucket_name = character(),
+  specific_value = logical()
 )
 
 # ----- Step 2: Unit test ----- #
