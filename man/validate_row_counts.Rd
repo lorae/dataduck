@@ -15,8 +15,9 @@ validate_row_counts(db, expected_count, step_description)
 be included in the error message if validation fails.}
 }
 \value{
-This function does not return a value. If the validation fails (i.e., the actual row count does
+If the validation fails (i.e., the actual row count does
 not match the expected count), it raises an error and stops the pipeline execution.
+If validation succeeds, it prints a statement.
 }
 \description{
 This function checks whether the actual number of rows in a database matches the expected number of rows.
