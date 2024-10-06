@@ -1,3 +1,33 @@
+create_value_logic <- function(
+    value_lookup_table,
+    col
+) {
+  
+  # Define a function that writes each line of output
+  write_sql_fragment <- function(i) {
+    bucket_name <- value_lookup_table$bucket_name[i]
+    specific_value <- value_lookup_table$specific_value[i]
+    
+    # Create SQL fragment
+    if (is.numeric(specific_value)) {
+      fragment <- glue("WHEN {col} = {specific_value} THEN '{bucket_name}'")
+    } else {
+      # Wrap specific_value in single quotes if it's not a number
+      fragment <- glue("WHEN {col} = '{specific_value}' THEN '{bucket_name}'")
+    }
+    
+    return(fragment)
+  }
+  
+  # Use lapply to apply the function over the row indices
+  sql_fragments <- lapply(
+    seq_len(nrow(value_lookup_table)),
+    write_sql_fragment
+  )
+  
+  # Combine the fragments into a single string
+  paste(unlist(sql_fragments), collapse = "\n")
+}
 create_sql_query <- function(
     lookup_table,
     col # Must be a string
