@@ -30,36 +30,36 @@ value_test <- tibble::tibble(
 # Define the empty range lookup table
 range_test_empty <- tibble::tibble(
   bucket_name = character(),
-  lower_bound = logical(),
-  upper_bound = logical()
+  lower_bound = numeric(),
+  upper_bound = numeric()
 )
 
 # Define the empty value lookup table
 value_test_empty <- tibble::tibble(
   bucket_name = character(),
-  specific_value = logical()
+  specific_value = numeric()
 )
 
-# ----- Step 2: Unit test ----- #
+# ----- Step 2: Unit tests ----- #
 
 test_that("write_sql_query produces correct SQL for nonempty value and range lookup tables", {
   
   expected_string <- "
-  ALTER TABLE ipums_bucketed
-  ADD AGE_bucket AS (
-    CASE
-      -- Value-based bucketing logic
-      WHEN AGE = 25 THEN 'Exactly 25'
-      WHEN AGE = 100 THEN 'Exactly 100'
-      -- Range-based bucketing logic
-      WHEN AGE >= 0 AND AGE < 16 THEN 'Under 16'
-      WHEN AGE >= 16 AND AGE < 18 THEN '16-17'
-      WHEN AGE >= 18 AND AGE < 23 THEN '18-22'
-      WHEN AGE >= 23 AND AGE < 30 THEN '23-29'
-      WHEN AGE >= 30 AND AGE < 200 THEN '30+'
-      ELSE 'Unknown'
-    END
-  );"
+ALTER TABLE ipums_bucketed ADD COLUMN AGE_bucket TEXT;
+UPDATE ipums_bucketed SET AGE_bucket = (
+  CASE
+    -- Value-based bucketing logic
+    WHEN AGE = 25 THEN 'Exactly 25'
+    WHEN AGE = 100 THEN 'Exactly 100'
+    -- Range-based bucketing logic
+    WHEN AGE >= 0 AND AGE < 16 THEN 'Under 16'
+    WHEN AGE >= 16 AND AGE < 18 THEN '16-17'
+    WHEN AGE >= 18 AND AGE < 23 THEN '18-22'
+    WHEN AGE >= 23 AND AGE < 30 THEN '23-29'
+    WHEN AGE >= 30 AND AGE < 200 THEN '30+'
+    ELSE 'Unknown'
+  END
+);"
   
   output_string <- write_sql_query(
     range_lookup_table = range_test,
@@ -80,17 +80,17 @@ test_that("write_sql_query produces correct SQL for nonempty value and range loo
 test_that("write_sql_query produces correct SQL for nonempty value and empty range lookup tables", {
   
   expected_string <- "
-  ALTER TABLE ipums_bucketed
-  ADD AGE_bucket AS (
-    CASE
-      -- Value-based bucketing logic
-      WHEN AGE = 25 THEN 'Exactly 25'
-      WHEN AGE = 100 THEN 'Exactly 100'
-      -- Range-based bucketing logic
-      -- None specified
-      ELSE 'Unknown'
-    END
-  );"
+ALTER TABLE ipums_bucketed ADD COLUMN AGE_bucket TEXT;
+UPDATE ipums_bucketed SET AGE_bucket = (
+  CASE
+    -- Value-based bucketing logic
+    WHEN AGE = 25 THEN 'Exactly 25'
+    WHEN AGE = 100 THEN 'Exactly 100'
+    -- Range-based bucketing logic
+    -- None specified
+    ELSE 'Unknown'
+  END
+);"
   
   output_string <- write_sql_query(
     range_lookup_table = range_test_empty,
@@ -111,20 +111,20 @@ test_that("write_sql_query produces correct SQL for nonempty value and empty ran
 test_that("write_sql_query produces correct SQL for empty value and nonempty range lookup tables", {
   
   expected_string <- "
-  ALTER TABLE ipums_bucketed
-  ADD AGE_bucket AS (
-    CASE
-      -- Value-based bucketing logic
-      -- None specified
-      -- Range-based bucketing logic
-      WHEN AGE >= 0 AND AGE < 16 THEN 'Under 16'
-      WHEN AGE >= 16 AND AGE < 18 THEN '16-17'
-      WHEN AGE >= 18 AND AGE < 23 THEN '18-22'
-      WHEN AGE >= 23 AND AGE < 30 THEN '23-29'
-      WHEN AGE >= 30 AND AGE < 200 THEN '30+'
-      ELSE 'Unknown'
-    END
-  );"
+ALTER TABLE ipums_bucketed ADD COLUMN AGE_bucket TEXT;
+UPDATE ipums_bucketed SET AGE_bucket = (
+  CASE
+    -- Value-based bucketing logic
+    -- None specified
+    -- Range-based bucketing logic
+    WHEN AGE >= 0 AND AGE < 16 THEN 'Under 16'
+    WHEN AGE >= 16 AND AGE < 18 THEN '16-17'
+    WHEN AGE >= 18 AND AGE < 23 THEN '18-22'
+    WHEN AGE >= 23 AND AGE < 30 THEN '23-29'
+    WHEN AGE >= 30 AND AGE < 200 THEN '30+'
+    ELSE 'Unknown'
+  END
+);"
   
   output_string <- write_sql_query(
     range_lookup_table = range_test,
@@ -156,4 +156,3 @@ test_that("write_sql_query throws an error when both value and range lookup tabl
   )
   
 })
-
