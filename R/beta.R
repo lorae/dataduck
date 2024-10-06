@@ -5,10 +5,11 @@ create_value_logic <- function(
   
   # Define a function that writes each line of output
   write_sql_fragment <- function(i) {
+    # Read values from lookup table needed to write one line of the query
     bucket_name <- value_lookup_table$bucket_name[i]
     specific_value <- value_lookup_table$specific_value[i]
     
-    # Create SQL fragment
+    # Create fragment using these values
     if (is.numeric(specific_value)) {
       fragment <- glue("WHEN {col} = {specific_value} THEN '{bucket_name}'")
     } else {
@@ -19,7 +20,8 @@ create_value_logic <- function(
     return(fragment)
   }
   
-  # Use lapply to apply the function over the row indices
+  # Use write_sql_fragment() to write one line of SQL for each row of the 
+  # lookup table
   sql_fragments <- lapply(
     seq_len(nrow(value_lookup_table)),
     write_sql_fragment
