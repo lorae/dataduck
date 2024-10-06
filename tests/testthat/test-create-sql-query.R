@@ -142,3 +142,18 @@ test_that("create_sql_query produces correct SQL for empty value and nonempty ra
   
 })
 
+test_that("create_sql_query throws an error when both value and range lookup tables are empty", {
+  
+  # Expect an error when both lookup tables are empty
+  expect_error(
+    create_sql_query(
+      range_lookup_table = range_test_empty,
+      value_lookup_table = value_test_empty,
+      col = "AGE",
+      table = "ipums_bucketed"
+    ),
+    regexp = "Cannot create SQL query. Both range_lookup_table and value_lookup_table have no rows."
+  )
+  
+})
+
