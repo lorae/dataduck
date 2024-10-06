@@ -37,33 +37,43 @@ create_sql_query <- function(
 ) {
   # Set the name for the new column based on the input col argument
   new_col <- paste0(col, "_bucket")
-  
-  # Generate the code block executing the value-based logic of the SQL query
-  value_logic <- lapply(
-    seq_len(nrow(value_lookup_table)),
-    write_sql_fragment_value,
-    lookup_table = value_lookup_table,
-    col = col
-  ) |> 
-    unlist() |>
-    paste(collapse = "\n    ") # newline and spaces for formatting
-  
+ 
+  # Generate the code block executing the value-based logic of the SQL query 
+  if (nrow(value_lookup_table) == 0) {
+    value_logic <- "-- None specified"
+  } else {
+    value_logic <- lapply(
+      seq_len(nrow(value_lookup_table)),
+      write_sql_fragment_value,
+      lookup_table = value_lookup_table,
+      col = col
+    ) |> 
+      unlist() |>
+      paste(collapse = "\n    ") # newline and spaces for formatting
+  }
+    
   # Generate the code block executing the range-based logic of the SQL query
-  range_logic <- lapply(
-    seq_len(nrow(range_lookup_table)),
-    write_sql_fragment_range,
-    lookup_table = range_lookup_table,
-    col = col
-  ) |> 
-    unlist() |>
-    paste(collapse = "\n    ") # newline and spaces for formatting
-
+  if (nrow(range_lookup_table) == 0) {
+    range_logic <- "-- None specified"
+  } else {
+    range_logic <- lapply(
+      seq_len(nrow(range_lookup_table)),
+      write_sql_fragment_range,
+      lookup_table = range_lookup_table,
+      col = col
+    ) |> 
+      unlist() |>
+      paste(collapse = "\n    ") # newline and spaces for formatting
+  }
+    
   # Construct the final SQL query, inserting the generated logic into the CASE statement
   query <- glue::glue(
     "ALTER TABLE {table}
     ADD {new_col} AS (
       CASE
+        -- Value-based bucketing logic
         {value_logic}
+        -- Range-based bucketing logic
         {range_logic}
         ELSE 'Unknown'
       END
@@ -72,4 +82,3 @@ create_sql_query <- function(
   
   return(query)
 }
-
