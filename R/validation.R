@@ -9,8 +9,9 @@
 #' @param step_description A string providing a description of the pipeline step being validated, which will 
 #'   be included in the error message if validation fails.
 #'
-#' @return This function does not return a value. If the validation fails (i.e., the actual row count does 
+#' @return If the validation fails (i.e., the actual row count does 
 #'   not match the expected count), it raises an error and stops the pipeline execution.
+#'   If validation succeeds, it prints a statement.
 #'
 #' @export
 validate_row_counts <- function(
@@ -26,6 +27,10 @@ validate_row_counts <- function(
     stop(glue::glue(
       "DATA VALIDATION FAILED: Unexpected number of rows found after ",
       "{step_description}: expected {expected_count}, got {actual_count}"
+    ))
+  } else {
+    print(glue::glue(
+      "Data validation successful: {step_description}."
     ))
   }
 }
