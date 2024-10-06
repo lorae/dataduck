@@ -1,7 +1,17 @@
-# Function which translates a single line of bucketing logic from a value lookup
-# table into a single line of SQL code
+#' Translate a single line of bucketing logic from a value lookup table into SQL code
+#'
+#' This function translates one line of a value-based lookup table into a corresponding
+#' SQL `CASE WHEN` statement.
+#'
+#' @param i Integer. The row index of the lookup table.
+#' @param lookup_table A tibble or data frame with at least two columns: `bucket_name` 
+#' and `specific_value`, which define the bucketing logic.
+#' @param col A string. The name of the column in the database that the SQL logic applies to.
+#' 
+#' @return A string. A single line of SQL `CASE WHEN` code for a value-based condition.
+#' @export
 write_sql_fragment_value <- function(i, lookup_table, col) {
-
+  
   bucket_name <- lookup_table$bucket_name[i]
   specific_value <- lookup_table$specific_value[i]
   
@@ -15,10 +25,20 @@ write_sql_fragment_value <- function(i, lookup_table, col) {
   return(fragment)
 }
 
-# Function which translates a single line of bucketing logic from a range lookup
-# table into a single line of SQL code
+#' Translate a single line of bucketing logic from a range lookup table into SQL code
+#'
+#' This function translates one line of a range-based lookup table into a corresponding
+#' SQL `CASE WHEN` statement.
+#'
+#' @param i Integer. The row index of the lookup table.
+#' @param lookup_table A tibble or data frame with at least three columns: `bucket_name`, 
+#' `lower_bound`, and `upper_bound`, which define the range bucketing logic.
+#' @param col A string. The name of the column in the database that the SQL logic applies to.
+#' 
+#' @return A string. A single line of SQL `CASE WHEN` code for a range-based condition.
+#' @export
 write_sql_fragment_range <- function(i, lookup_table, col) {
-
+  
   bucket_name <- lookup_table$bucket_name[i]
   lower_bound <- lookup_table$lower_bound[i]
   upper_bound <- lookup_table$upper_bound[i]
@@ -30,7 +50,21 @@ write_sql_fragment_range <- function(i, lookup_table, col) {
   return(fragment)
 }
 
-# Main function to create a full SQL query incorporating both value and range-based logic
+#' Create SQL statements to add and populate a new column with bucketing logic
+#'
+#' This function generates SQL `ALTER TABLE` and `UPDATE` statements to add a new column
+#' and populate it based on value-based and range-based bucketing rules provided by
+#' `value_lookup_table` and `range_lookup_table`.
+#'
+#' @param range_lookup_table A tibble or data frame with at least three columns: 
+#' `bucket_name`, `lower_bound`, and `upper_bound` to define the range bucketing logic.
+#' @param value_lookup_table A tibble or data frame with at least two columns: 
+#' `bucket_name` and `specific_value` to define the value-based bucketing logic.
+#' @param col A string. The name of the column in the database that the SQL logic applies to.
+#' @param table A string. The name of the SQL table where the new column will be added.
+#' 
+#' @return A string containing the SQL statements to add and update the new column.
+#' @export
 write_sql_query <- function(
     range_lookup_table,
     value_lookup_table,
@@ -44,8 +78,8 @@ write_sql_query <- function(
   # Verify that at least one of the lookup tables is nonempty before proceeding
   if (nrow(value_lookup_table) == 0 & nrow(range_lookup_table) == 0) {
     stop(paste(
-    "Cannot write SQL query. Both range_lookup_table and value_lookup_table",
-    "have no rows."
+      "Cannot write SQL query. Both range_lookup_table and value_lookup_table",
+      "have no rows."
     ))
   }
   
