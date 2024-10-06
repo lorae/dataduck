@@ -35,8 +35,10 @@ test_that("create_sql_query produces correct SQL for value and range lookup tabl
   ALTER TABLE ipums_bucketed
   ADD AGE_bucket AS (
     CASE
+      -- Value-based bucketing logic
       WHEN AGE = 25 THEN 'Exactly 25'
       WHEN AGE = 100 THEN 'Exactly 100'
+      -- Range-based bucketing logic
       WHEN AGE >= 0 AND AGE < 16 THEN 'Under 16'
       WHEN AGE >= 16 AND AGE < 18 THEN '16-17'
       WHEN AGE >= 18 AND AGE < 23 THEN '18-22'
