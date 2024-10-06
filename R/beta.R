@@ -35,9 +35,18 @@ create_sql_query <- function(
     col,   # Must be a string
     table  # Must be a string
 ) {
+  
   # Set the name for the new column based on the input col argument
   new_col <- paste0(col, "_bucket")
- 
+  
+  # Verify that at least one of the lookup tables is nonempty before proceeding
+  if (nrow(value_lookup_table) == 0 & nrow(range_lookup_table) == 0) {
+    stop(paste(
+    "Cannot create SQL query. Both range_lookup_table and value_lookup_table",
+    "have no rows."
+    ))
+  }
+  
   # Generate the code block executing the value-based logic of the SQL query 
   if (nrow(value_lookup_table) == 0) {
     value_logic <- "-- None specified"
