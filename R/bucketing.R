@@ -233,3 +233,33 @@ race_eth_bucket <- function(data) {
   return(result)
 }
 
+
+#' Generate SQL Query for Joint Race/Ethnicity Bucket
+#'
+#' This function generates a SQL query to add a `RACE_ETH_bucket` column to the database table.
+#'
+#' @param table A string. The name of the SQL table where the new column will be added.
+#'
+#' @return A string. A SQL query with `CASE WHEN` statements to generate the `RACE_ETH_bucket`.
+#' @export
+write_race_eth_sql_query <- function(table) {
+  query <- glue::glue(
+    "ALTER TABLE {table}
+    ADD COLUMN RACE_ETH_bucket TEXT;
+    UPDATE {table}
+    SET RACE_ETH_bucket = (
+      CASE
+        WHEN HISPAN_bucket = 'hispanic' THEN 'Hispanic'
+        WHEN RACE_bucket = 'black' THEN 'Black'
+        WHEN RACE_bucket = 'aapi' THEN 'AAPI'
+        WHEN RACE_bucket = 'aian' THEN 'AIAN'
+        WHEN RACE_bucket = 'multi' THEN 'Multiracial'
+        WHEN RACE_bucket = 'white' THEN 'White'
+        WHEN RACE_bucket = 'other' THEN 'Other'
+        ELSE NULL
+      END
+    );"
+  )
+  
+  return(query)
+}
