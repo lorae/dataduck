@@ -43,7 +43,22 @@ crosstab_mean <- function(
     select(!!!group_by_cols, count, sum_weights, weighted_mean)
 }
 
-create_crosstabs <- function(
+#' Calculate Count and Weighted Sum for Groups
+#'
+#' This function calculates the count of observations and the sum of weights for 
+#' every unique cross-combination of the specified grouping columns. It handles 
+#' both data frames and database pointers, allowing for flexible input types.
+#'
+#' @param data A data frame or database connection object. The data containing the weight 
+#'   and grouping columns.
+#' @param weight_column A string specifying the name of the column containing the weights.
+#' @param group_by_columns A character vector specifying the column names to group by.
+#'
+#' @return A tibble or database connection object with the grouped data, containing the group-by columns, 
+#'   the count of observations, and the sum of weights for each group.
+#'
+#' @export
+crosstab_count <- function(
     data, 
     weight_column, 
     group_by_columns) {
@@ -60,9 +75,6 @@ create_crosstabs <- function(
     summarize(
       sum_weights = sum(!!weight_col, na.rm = TRUE),
       count = n()
-      # Add weighted variance. Potential resources:
-      # https://stats.stackexchange.com/questions/51442/weighted-variance-one-more-time
-      # https://influentialpoints.com/Training/two-sample_t-test-principles-properties-assumptions.htm
     ) |>
     select(!!!group_by_cols, count, sum_weights)
 }
