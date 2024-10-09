@@ -12,15 +12,15 @@ root <- find_root(is_rstudio_project)
 setwd(root)
 
 # Unit test for calculate_weighted_mean function
-test_that("weighted_mean produces correct results", {
+test_that("crosstab_mean produces correct results", {
   
   # Step 1: Read the test data from a CSV file
   # Replace 'path/to/test_data.csv' with the actual file path
-  test_data <- read_csv("tests/test-data/weighted-mean-inputs.csv")
+  test_data <- read_csv("tests/test-data/crosstab-mean-inputs.csv")
   
   # Step 2: Read the expected results from a CSV file into a tibble
   # Replace 'path/to/expected.csv' with the actual file path
-  expected <- read_csv("tests/test-data/weighted-mean-expected.csv") %>%
+  expected <- read_csv("tests/test-data/crosstab-mean-expected.csv") %>%
     as_tibble()  # Convert to tibble if not already one
   
   # Step 3: Load the test data into a DuckDB database
@@ -28,7 +28,7 @@ test_that("weighted_mean produces correct results", {
   dbWriteTable(con, "test_data", test_data, overwrite = TRUE)
   
   # Step 4: Query the DuckDB table within the weighted_mean function
-  output <- weighted_mean(
+  output <- crosstab_mean(
     data = tbl(con, "test_data"),  # Use DuckDB table as input
     value_column = "NUMPREC",
     weight_column = "PERWT",

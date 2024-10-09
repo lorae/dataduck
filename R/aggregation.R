@@ -1,8 +1,8 @@
 #' Calculate Weighted Mean
 #'
 #' This function calculates the weighted mean, sum of weights, and count of observations
-#' for a given value column, grouped by specified columns. The function can handle 
-#' both data frames and database pointers.
+#' for a given value column, listed for every unique cross-combination of the specified 
+#' columns. The function can handle both data frames and database pointers.
 #'
 #' @param data A data frame or a database connection object. The data containing the 
 #'   value, weight, and grouping columns.
@@ -15,7 +15,7 @@
 #'   and the calculated weighted mean for each group.
 #'
 #' @export
-weighted_mean <- function(
+crosstab_mean <- function(
     data, 
     value_column, 
     weight_column, 
@@ -66,6 +66,7 @@ create_crosstabs <- function(
     ) |>
     select(!!!group_by_cols, count, sum_weights)
 }
+
 
 #' Calculate the Difference in Means Between Two Datasets
 #'
