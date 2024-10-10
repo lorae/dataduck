@@ -24,42 +24,46 @@ crosstab <- function(
     data, 
     weight, 
     group_by, 
-    # Optional: for calculating weighted means
-    mean = FALSE, 
-    value = NULL, 
-    # Optional: for calculating percentages
-    percent = FALSE,
-    percent_group_by = NULL
+    value = NULL,  # Optional: for calculating weighted means
+    percent_group_by = NULL  # Optional: for calculating percentages
 ) {
-  # Initial checks
-  if (is.null(value) & mean == TRUE) {
-    stop("The 'value' must be specified in order for 'mean' to be calculated.")
+  # Check if we need to calculate weighted mean or percentages
+  calculate_mean <- !is.null(value)
+  calculate_percent <- !is.null(percent_group_by)
+  
+  # Message to track the calculation type
+  if (calculate_mean) {
+    message("Since `value` column has been specified, weighted means are being calculated.")
   }
-  if (!is.null(value) & mean == FALSE) {
-    warning("'value' argument is unused, because 'mean' argument has been set to FALSE.")
-  }
-  if (is.null(percent_group_by) & percent == TRUE) {
-    stop("'percent_group_by' must be specified in order for 'percent' to be calculated.")
-  }
-  if (!is.null(percent_group_by) & percent == FALSE) {
-    warning("'percent_group_by' argument is unused, because 'percent' argument has been set to FALSE.")
-  }
-  if (!all(percent_group_by %in% group_by)) {
-    stop("All elements of 'percent_group_by' must be included in 'group_by'.")
+  if (calculate_percent) {
+    if (!all(percent_group_by %in% group_by)) {
+      stop("All elements of 'percent_group_by' must be included in 'group_by'.")
+    }
+    message("Since `percent_group_by` column has been specified, percentages are being calculated.")
   }
   
-  # Start the pipeline
-  result <- data |>
-    group_by(!!!syms(group_by)) |>
-    summarize(
-      weighted_count = sum(!!sym(weight), na.rm = TRUE),
-      count = n(),
-      total_value_weighted = if (mean) sum(!!sym(value) * !!sym(weight), na.rm = TRUE) else NA_real_,
-      .groups = "drop"
-    )
+  # Base summarization: Always calculate weighted_count and count
+  if (calculate_mean) {
+    result <- data |>
+      group_by(!!!syms(group_by)) |>
+      summarize(
+        weighted_count = sum(!!sym(weight), na.rm = TRUE),
+        count = n(),
+        total_value_weighted = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
+        .groups = "drop"
+        ) 
+    } else {
+      result <- data |>
+        group_by(!!!syms(group_by)) |>
+        summarize(
+          weighted_count = sum(!!sym(weight), na.rm = TRUE),
+          count = n(),
+          .groups = "drop"
+        )
+    }
   
   # Conditionally add the weighted mean
-  if (mean) {
+  if (calculate_mean) {
     result <- result |>
       mutate(
         weighted_mean = total_value_weighted / weighted_count
@@ -68,7 +72,7 @@ crosstab <- function(
   }
   
   # Conditionally add the percentage within the explicitly defined group
-  if (percent) {
+  if (calculate_percent) {
     result <- result |>
       group_by(!!!syms(percent_group_by)) |>
       mutate(
@@ -77,7 +81,7 @@ crosstab <- function(
       ungroup()  # Ungroup after calculating percentage
   }
   
-  # Return the final result, including group_by columns and computed columns
+  # Return the final result
   result |>
     select(!!!syms(group_by), everything())
 }
