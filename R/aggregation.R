@@ -1,3 +1,94 @@
+#' Calculate Weighted Mean, Count, and Percentages for Groups
+#'
+#' This function calculates the weighted mean, sum of weights, and count of observations
+#' for the specified value and weight columns, grouped by the specified columns. 
+#' Additionally, it can calculate percentages within specified groups. 
+#' The user can control whether to calculate the weighted mean and percentages via 
+#' the `mean` and `percent` arguments.
+#'
+#' @param data A data frame or a database connection object containing the data to be aggregated.
+#' @param weight A string specifying the name of the column containing the weights.
+#' @param group_by A character vector of column names to group by for the main aggregations.
+#' @param mean Logical, whether to calculate the weighted mean. Defaults to `FALSE`.
+#' @param value A string specifying the name of the column containing the values to be averaged. 
+#'   Required if `mean = TRUE`.
+#' @param percent Logical, whether to calculate percentages. Defaults to `FALSE`.
+#' @param percent_group_by A character vector specifying the column names to group by for the percentage calculation. 
+#'   All elements of `percent_group_by` must be included in `group_by`. Required if `percent = TRUE`.
+#'
+#' @return A tibble or database connection object containing the group-by columns, sum of weights, 
+#'   and optionally the count of observations, weighted mean, and percentages for each group.
+#'
+#' @export
+crosstab <- function(
+    data, 
+    weight, 
+    group_by, 
+    # Optional: for calculating weighted means
+    mean = FALSE, 
+    value = NULL, 
+    # Optional: for calculating percentages
+    percent = FALSE,
+    percent_group_by = NULL
+) {
+  # Initial checks
+  if (is.null(value) & mean == TRUE) {
+    stop("The 'value' must be specified in order for 'mean' to be calculated.")
+  }
+  if (!is.null(value) & mean == FALSE) {
+    warning("'value' argument is unused, because 'mean' argument has been set to FALSE.")
+  }
+  if (is.null(percent_group_by) & percent == TRUE) {
+    stop("'percent_group_by' must be specified in order for 'percent' to be calculated.")
+  }
+  if (!is.null(percent_group_by) & percent == FALSE) {
+    warning("'percent_group_by' argument is unused, because 'percent' argument has been set to FALSE.")
+  }
+  if (!all(percent_group_by %in% group_by)) {
+    stop("All elements of 'percent_group_by' must be included in 'group_by'.")
+  }
+  
+  # Start the pipeline
+  result <- data |>
+    group_by(!!!syms(group_by)) |>
+    summarize(
+      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      count = n(),
+      total_value_weighted = if (mean) sum(!!sym(value) * !!sym(weight), na.rm = TRUE) else NA_real_,
+      .groups = "drop"
+    )
+  
+  # Conditionally add the weighted mean
+  if (mean) {
+    result <- result |>
+      mutate(
+        weighted_mean = total_value_weighted / weighted_count
+      ) |>
+      select(-total_value_weighted)  # Remove the intermediate result
+  }
+  
+  # Conditionally add the percentage within the explicitly defined group
+  if (percent) {
+    result <- result |>
+      group_by(!!!syms(percent_group_by)) |>
+      mutate(
+        percent = 100 * (weighted_count / sum(weighted_count, na.rm = TRUE))
+      ) |>
+      ungroup()  # Ungroup after calculating percentage
+  }
+  
+  # Return the final result, including group_by columns and computed columns
+  result |>
+    select(!!!syms(group_by), everything())
+}
+
+
+
+
+
+
+
+
 #' Calculate Weighted Mean
 #'
 #' This function calculates the weighted mean, sum of weights, and count of observations
