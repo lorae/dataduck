@@ -53,16 +53,17 @@ crosstab_count <- function(
 #' @return A tibble or database connection object containing the group-by columns and weighted mean for each group.
 #'
 #' @export
-crosstab_weighted_mean <- function(data, value, weight, group_by) {
+crosstab_mean <- function(data, value, weight, group_by) {
   data |>
     group_by(!!!syms(group_by)) |>
     summarize(
       total_value_weighted = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
       weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      count = n(),
       weighted_mean = total_value_weighted / weighted_count,
       .groups = "drop"
     ) |>
-    select(-total_value_weighted, -weighted_count)
+    select(-total_value_weighted)
 }
 
 #' Calculate Percentages Within Groups

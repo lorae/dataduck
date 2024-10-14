@@ -23,7 +23,7 @@ expected_percent_tb <- read_csv("tests/test-data/crosstab-percent-expected.csv")
 
 # ----- Unit tests ----- #
 
-test_that("crosstab produces correct weighted mean results on database", {
+test_that("crosstab_mean produces correct weighted mean results on database", {
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
@@ -86,7 +86,7 @@ test_that("crosstab produces correct percentage results on database", {
     data = tbl(con, "input"),
     weight = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket", "SEX"),
-    percent_group_by = c("AGE_bucket", "RACE_ETH_bucket")
+    percent_group_by = c("RACE_ETH_bucket", "AGE_bucket")
   ) |> collect()
   
   # Round and arrange output for comparison
