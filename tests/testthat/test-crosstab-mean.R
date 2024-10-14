@@ -24,8 +24,27 @@ expected_tb <- tribble(
   "r000_100k",      "r00_49",    "black",          116,             2,      2.612068966,
   "r000_100k",      "r50plus",   "black",          106,             3,      1.877358491,
   "r000_100k",      "r50plus",   "aian",           99,              2,      1.656565657,
+  "r100kplus",      "r00_49",    "aapi",           228,             5,      5
+)
+
+expected_combo_tb <- tribble(
+  ~HHINCOME_bucket, ~AGE_bucket, ~RACE_ETH_bucket, ~weighted_count, ~count, ~weighted_mean,
+  "r000_100k",      "r00_49",    "white",          65,              2,      2.6,
+  "r000_100k",      "r00_49",    "black",          116,             2,      2.612068966,
+  "r000_100k",      "r00_49",    "aapi",           0,               0,      NA,
+  "r000_100k",      "r00_49",    "aian",           0,               0,      NA,
+  "r000_100k",      "r50plus",   "white",          0,               0,      NA,
+  "r000_100k",      "r50plus",   "black",          106,             3,      1.877358491,
+  "r000_100k",      "r50plus",   "aapi",           0,               0,      NA,
+  "r000_100k",      "r50plus",   "aian",           99,              2,      1.656565657,
+  "r100kplus",      "r00_49",    "white",          0,               0,      NA,
+  "r100kplus",      "r00_49",    "black",          0,               0,      NA,
   "r100kplus",      "r00_49",    "aapi",           228,             5,      5,
-  "negative",       "r50plus",   "hispanic",       13,              1,      1
+   "r100kplus",      "r00_49",    "aian",           0,               0,      NA,
+  "r100kplus",      "r50plus",   "white",          0,               0,      NA,
+  "r100kplus",      "r50plus",   "black",          0,               0,      NA,
+  "r100kplus",      "r50plus",   "aapi",           0,               0,      NA,
+  "r100kplus",      "r50plus",   "aian",           0,               0,      NA
 )
 
 

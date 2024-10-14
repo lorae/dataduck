@@ -7,7 +7,6 @@ HHINCOME_bucket,AGE_bucket,RACE_ETH_bucket,SEX,NUMPREC,PERWT
 "r100kplus","r00_49","aapi",1,5,41
 "r100kplus","r00_49","aapi",1,5,42
 "r100kplus","r00_49","aapi",2,5,60
-"negative","r50plus","hispanic",1,1,13
 "r000_100k","r50plus","black",2,1,43
 "r000_100k","r50plus","aian",2,2,65
 "r000_100k","r00_49","black",2,2,45
