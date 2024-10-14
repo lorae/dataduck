@@ -109,3 +109,54 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   
   dbDisconnect(con, shutdown = TRUE)
 })
+
+test_that("crosstab_mean produces correct weighted mean results on tibble with every_combo = FALSE", {
+
+  # Compute weighted mean using DuckDB table
+  output_tb <- crosstab_mean(
+    data = input_mean_tb,
+    value = "NUMPREC",
+    weight = "PERWT",
+    group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
+    every_combo = FALSE
+  )
+  
+  # Round and arrange output for comparison
+  output_tb <- output_tb |>
+    mutate(weighted_mean = round(weighted_mean, 6)) |>
+    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
+  
+  expected_tb <- expected_tb |>
+    mutate(weighted_mean = round(weighted_mean, 6)) |>
+    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
+  
+  # Compare results
+  expect_equal(output_tb, expected_tb)
+
+})
+
+test_that("crosstab_mean produces correct weighted mean results on tibble with every_combo = TRUE", {
+
+  # Compute weighted mean using DuckDB table
+  output_tb <- crosstab_mean(
+    data = input_mean_tb,
+    value = "NUMPREC",
+    weight = "PERWT",
+    group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
+    every_combo = TRUE
+  )
+  
+  # Round and arrange output for comparison
+  output_tb <- output_tb |>
+    mutate(weighted_mean = round(weighted_mean, 6)) |>
+    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
+  
+  expected_combo_tb <- expected_combo_tb |>
+    mutate(weighted_mean = round(weighted_mean, 6)) |>
+    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
+  
+  # Compare results
+  expect_equal(output_tb, expected_combo_tb)
+
+})
+
