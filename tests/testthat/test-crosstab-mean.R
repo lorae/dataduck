@@ -20,7 +20,7 @@ expected_mean_tb <- read_csv("tests/test-data/crosstab-mean-expected.csv")
 
 # ----- Unit tests ----- #
 
-test_that("crosstab_mean produces correct weighted mean results on database", {
+test_that("crosstab_mean produces correct weighted mean results on database with every_combo = FALSE", {
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
@@ -31,7 +31,8 @@ test_that("crosstab_mean produces correct weighted mean results on database", {
     data = tbl(con, "input"),
     value = "NUMPREC",
     weight = "PERWT",
-    group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket", "SEX")
+    group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket", "SEX"),
+    every_combo = FALSE
   ) |> collect()
   
   # Round and arrange output for comparison

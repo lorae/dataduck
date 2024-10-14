@@ -21,8 +21,8 @@ crosstab_count <- function(
     group_by,
     every_combo = FALSE
 ) {
-  # Start the pipeline
-  result <- data |>
+
+    result <- data |>
     group_by(!!!syms(group_by)) |>
     summarize(
       weighted_count = sum(!!sym(weight), na.rm = TRUE),
@@ -53,8 +53,14 @@ crosstab_count <- function(
 #' @return A tibble or database connection object containing the group-by columns and weighted mean for each group.
 #'
 #' @export
-crosstab_mean <- function(data, value, weight, group_by) {
-  data |>
+crosstab_mean <- function(
+    data, 
+    value, 
+    weight, 
+    group_by,
+    every_combo = FALSE
+) {
+  result <- data |>
     group_by(!!!syms(group_by)) |>
     summarize(
       total_value_weighted = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
@@ -66,6 +72,15 @@ crosstab_mean <- function(data, value, weight, group_by) {
       weighted_mean = total_value_weighted / weighted_count
     ) |>
     select(-total_value_weighted)
+  
+  # Conditionally include all combinations of grouping variables
+  if (every_combo) {
+    # Use complete to fill in missing combinations
+    result <- result |>
+      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0))
+  }
+  
+  return(result)
 }
 
 #' Calculate Percentages Within Groups
