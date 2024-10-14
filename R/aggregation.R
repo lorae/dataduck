@@ -34,7 +34,7 @@ crosstab_count <- function(
   if (every_combo) {
     # Use complete to fill in missing combinations
     result <- result |>
-      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0))
+      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0, weighted_mean = NA))
   }
   
   return(result)
