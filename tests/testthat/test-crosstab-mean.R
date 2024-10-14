@@ -6,6 +6,7 @@ library("DBI")
 library("duckdb")
 library("tibble")
 library("dplyr")
+library("tidyr")
 
 # Set working directory to project root
 root <- find_root(is_rstudio_project)
@@ -16,7 +17,17 @@ devtools::load_all("../dataduck")
 
 # Read test data from pre-computed CSVs
 input_mean_tb <- read_csv("tests/test-data/crosstab-mean-inputs.csv")
-expected_mean_tb <- read_csv("tests/test-data/crosstab-mean-expected.csv")
+
+expected_tb <- tribble(
+  ~HHINCOME_bucket, ~AGE_bucket, ~RACE_ETH_bucket, ~weighted_count, ~count, ~weighted_mean,
+  "r000_100k",      "r00_49",    "white",          65,              2,      2.6,
+  "r000_100k",      "r00_49",    "black",          116,             2,      2.612068966,
+  "r000_100k",      "r50plus",   "black",          106,             3,      1.877358491,
+  "r000_100k",      "r50plus",   "aian",           99,              2,      1.656565657,
+  "r100kplus",      "r00_49",    "aapi",           228,             5,      5,
+  "negative",       "r50plus",   "hispanic",       13,              1,      1
+)
+
 
 # ----- Unit tests ----- #
 
@@ -27,25 +38,25 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   dbWriteTable(con, "input", input_mean_tb, overwrite = TRUE)
   
   # Compute weighted mean using DuckDB table
-  output_mean_tb <- crosstab_mean(
+  output_tb <- crosstab_mean(
     data = tbl(con, "input"),
     value = "NUMPREC",
     weight = "PERWT",
-    group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket", "SEX"),
+    group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
     every_combo = FALSE
   ) |> collect()
   
   # Round and arrange output for comparison
-  output_mean_tb <- output_mean_tb |>
+  output_tb <- output_tb |>
     mutate(weighted_mean = round(weighted_mean, 6)) |>
-    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket, SEX)
+    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
-  expected_mean_tb <- expected_mean_tb |>
+  expected_tb <- expected_tb |>
     mutate(weighted_mean = round(weighted_mean, 6)) |>
-    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket, SEX)
+    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
-  expect_equal(output_mean_tb, expected_mean_tb)
+  expect_equal(output_tb, expected_tb)
   
   dbDisconnect(con, shutdown = TRUE)
 })
