@@ -16,7 +16,7 @@ setwd(root)
 devtools::load_all("../dataduck")
 
 # Read test data from pre-computed CSVs
-input_mean_tb <- read_csv("tests/test-data/crosstab-mean-inputs.csv")
+input_tb <- read_csv("tests/test-data/crosstab-mean-inputs.csv")
 
 expected_tb <- tribble(
   ~HHINCOME_bucket, ~AGE_bucket, ~RACE_ETH_bucket, ~weighted_count, ~count, ~weighted_mean,
@@ -54,7 +54,7 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
-  dbWriteTable(con, "input", input_mean_tb, overwrite = TRUE)
+  dbWriteTable(con, "input", input_tb, overwrite = TRUE)
   
   # Compute weighted mean using DuckDB table
   output_tb <- crosstab_mean(
@@ -84,7 +84,7 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
-  dbWriteTable(con, "input", input_mean_tb, overwrite = TRUE)
+  dbWriteTable(con, "input", input_tb, overwrite = TRUE)
   
   # Compute weighted mean using DuckDB table
   output_tb <- crosstab_mean(
@@ -114,7 +114,7 @@ test_that("crosstab_mean produces correct weighted mean results on tibble with e
 
   # Compute weighted mean using DuckDB table
   output_tb <- crosstab_mean(
-    data = input_mean_tb,
+    data = input_tb,
     value = "NUMPREC",
     weight = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
@@ -139,7 +139,7 @@ test_that("crosstab_mean produces correct weighted mean results on tibble with e
 
   # Compute weighted mean using DuckDB table
   output_tb <- crosstab_mean(
-    data = input_mean_tb,
+    data = input_tb,
     value = "NUMPREC",
     weight = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
