@@ -1,178 +1,106 @@
-#' Calculate Weighted Mean, Count, and Percentages for Groups
+#' Calculate Weighted and Unweighted Counts for Groups
 #'
-#' This function calculates the weighted mean, sum of weights, and count of observations
-#' for the specified value and weight columns, grouped by the specified columns. 
-#' Additionally, it can calculate percentages within specified groups. 
-#' The user can control whether to calculate the weighted mean and percentages via 
-#' the `mean` and `percent` arguments.
+#' This function calculates the weighted count (sum of weights) and the unweighted count
+#' of observations for the specified weight column, grouped by the specified columns.
+#' Optionally, it can include all combinations of the grouping variables, even if some combinations
+#' do not exist in the data, setting the counts to zero for those combinations.
 #'
 #' @param data A data frame or a database connection object containing the data to be aggregated.
 #' @param weight A string specifying the name of the column containing the weights.
-#' @param group_by A character vector of column names to group by for the main aggregations.
-#' @param mean Logical, whether to calculate the weighted mean. Defaults to `FALSE`.
-#' @param value A string specifying the name of the column containing the values to be averaged. 
-#'   Required if `mean = TRUE`.
-#' @param percent Logical, whether to calculate percentages. Defaults to `FALSE`.
-#' @param percent_group_by A character vector specifying the column names to group by for the percentage calculation. 
-#'   All elements of `percent_group_by` must be included in `group_by`. Required if `percent = TRUE`.
+#' @param group_by A character vector of column names to group by.
+#' @param every_combo Logical, whether to include all combinations of the grouping variables,
+#'   setting counts to zero for combinations not present in the data. Defaults to `FALSE`.
 #'
-#' @return A tibble or database connection object containing the group-by columns, sum of weights, 
-#'   and optionally the count of observations, weighted mean, and percentages for each group.
-#'
-#' @export
-crosstab <- function(
-    data, 
-    weight, 
-    group_by, 
-    value = NULL,  # Optional: for calculating weighted means
-    percent_group_by = NULL  # Optional: for calculating percentages
-) {
-  # Check if we need to calculate weighted mean or percentages
-  calculate_mean <- !is.null(value)
-  calculate_percent <- !is.null(percent_group_by)
-  
-  # Message to track the calculation type
-  if (calculate_mean) {
-    message("Since `value` column has been specified, weighted means are being calculated.")
-  }
-  if (calculate_percent) {
-    if (!all(percent_group_by %in% group_by)) {
-      stop("All elements of 'percent_group_by' must be included in 'group_by'.")
-    }
-    message("Since `percent_group_by` column has been specified, percentages are being calculated.")
-  }
-  
-  # Base summarization: Always calculate weighted_count and count
-  if (calculate_mean) {
-    result <- data |>
-      group_by(!!!syms(group_by)) |>
-      summarize(
-        weighted_count = sum(!!sym(weight), na.rm = TRUE),
-        count = n(),
-        total_value_weighted = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
-        .groups = "drop"
-        ) 
-    } else {
-      result <- data |>
-        group_by(!!!syms(group_by)) |>
-        summarize(
-          weighted_count = sum(!!sym(weight), na.rm = TRUE),
-          count = n(),
-          .groups = "drop"
-        )
-    }
-  
-  # Conditionally add the weighted mean
-  if (calculate_mean) {
-    result <- result |>
-      mutate(
-        weighted_mean = total_value_weighted / weighted_count
-      ) |>
-      select(-total_value_weighted)  # Remove the intermediate result
-  }
-  
-  # Conditionally add the percentage within the explicitly defined group
-  if (calculate_percent) {
-    result <- result |>
-      group_by(!!!syms(percent_group_by)) |>
-      mutate(
-        percent = 100 * (weighted_count / sum(weighted_count, na.rm = TRUE))
-      ) |>
-      ungroup()  # Ungroup after calculating percentage
-  }
-  
-  # Return the final result
-  result |>
-    select(!!!syms(group_by), everything())
-}
-
-
-
-
-
-
-
-
-#' Calculate Weighted Mean
-#'
-#' This function calculates the weighted mean, sum of weights, and count of observations
-#' for a given value column, listed for every unique cross-combination of the specified 
-#' columns. The function can handle both data frames and database pointers.
-#'
-#' @param data A data frame or a database connection object. The data containing the 
-#'   value, weight, and grouping columns.
-#' @param value_column A string specifying the name of the column containing the values
-#'   to be averaged.
-#' @param weight_column A string specifying the name of the column containing the weights.
-#' @param group_by_columns A character vector of column names to group by.
-#'
-#' @return A tibble or database connection object containing the group-by columns, count of observations, sum of weights,
-#'   and the calculated weighted mean for each group.
-#'
-#' @export
-crosstab_mean <- function(
-    data, 
-    value_column, 
-    weight_column, 
-    group_by_columns) {
-  
-  # Use quasiquotation to handle column names passed as strings
-  value_col <- sym(value_column)
-  weight_col <- sym(weight_column)
-  
-  # Dynamically reference grouping columns
-  group_by_cols <- syms(group_by_columns)
-  
-  # Calculate the weighted mean, sum of weights, and count of observations
-  data %>%
-    group_by(!!!group_by_cols) |>
-    summarize(
-      total_value_weighted = sum(!!value_col * !!weight_col, na.rm = TRUE),
-      sum_weights = sum(!!weight_col, na.rm = TRUE),
-      count = n()
-      # Add weighted variance. Potential resources:
-      # https://stats.stackexchange.com/questions/51442/weighted-variance-one-more-time
-      # https://influentialpoints.com/Training/two-sample_t-test-principles-properties-assumptions.htm
-    ) |>
-    mutate(weighted_mean = total_value_weighted / sum_weights) |>
-    select(!!!group_by_cols, count, sum_weights, weighted_mean)
-}
-
-#' Calculate Count and Weighted Sum for Groups
-#'
-#' This function calculates the count of observations and the sum of weights for 
-#' every unique cross-combination of the specified grouping columns. It handles 
-#' both data frames and database pointers, allowing for flexible input types.
-#'
-#' @param data A data frame or database connection object. The data containing the weight 
-#'   and grouping columns.
-#' @param weight_column A string specifying the name of the column containing the weights.
-#' @param group_by_columns A character vector specifying the column names to group by.
-#'
-#' @return A tibble or database connection object with the grouped data, containing the group-by columns, 
-#'   the count of observations, and the sum of weights for each group.
+#' @return A tibble or database connection object containing the group-by columns, weighted count,
+#'   and unweighted count for each group.
 #'
 #' @export
 crosstab_count <- function(
-    data, 
-    weight_column, 
-    group_by_columns) {
-  
-  # Use quasiquotation to handle column names passed as strings
-  weight_col <- sym(weight_column)
-  
-  # Dynamically reference grouping columns
-  group_by_cols <- syms(group_by_columns)
-  
-  # Calculate the weighted mean, sum of weights, and count of observations
-  data %>%
-    group_by(!!!group_by_cols) |>
+    data,
+    weight,
+    group_by,
+    every_combo = FALSE
+) {
+  # Start the pipeline
+  result <- data |>
+    group_by(!!!syms(group_by)) |>
     summarize(
-      sum_weights = sum(!!weight_col, na.rm = TRUE),
-      count = n()
-    ) |>
-    select(!!!group_by_cols, count, sum_weights)
+      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      count = n(),
+      .groups = "drop"
+    )
+  
+  # Conditionally include all combinations of grouping variables
+  if (every_combo) {
+    # Use complete to fill in missing combinations
+    result <- result |>
+      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0))
+  }
+  
+  return(result)
 }
+
+
+#' Calculate Weighted Mean for Groups
+#'
+#' This function calculates the weighted mean for the specified value and weight columns, grouped by the specified columns.
+#'
+#' @param data A data frame or a database connection object containing the data to be aggregated.
+#' @param value A string specifying the name of the column containing the values to be averaged.
+#' @param weight A string specifying the name of the column containing the weights.
+#' @param group_by A character vector of column names to group by.
+#'
+#' @return A tibble or database connection object containing the group-by columns and weighted mean for each group.
+#'
+#' @export
+crosstab_weighted_mean <- function(data, value, weight, group_by) {
+  data |>
+    group_by(!!!syms(group_by)) |>
+    summarize(
+      total_value_weighted = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
+      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      weighted_mean = total_value_weighted / weighted_count,
+      .groups = "drop"
+    ) |>
+    select(-total_value_weighted, -weighted_count)
+}
+
+#' Calculate Percentages Within Groups
+#'
+#' This function calculates percentages of weighted counts within specified groups.
+#'
+#' @param data A data frame or a database connection object containing the data to be aggregated.
+#' @param weight A string specifying the name of the column containing the weights.
+#' @param group_by A character vector of column names to group by for the main counts.
+#' @param percent_group_by A character vector of column names to group by for the percentage calculation.
+#'   All elements of `percent_group_by` must be included in `group_by`.
+#'
+#' @return A tibble or database connection object containing the group-by columns and percentages for each group.
+#'
+#' @export
+crosstab_percent <- function(data, weight, group_by, percent_group_by) {
+  if (!all(percent_group_by %in% group_by)) {
+    stop("All elements of 'percent_group_by' must be included in 'group_by'.")
+  }
+  
+  data |>
+    group_by(!!!syms(group_by)) |>
+    summarize(
+      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    group_by(!!!syms(percent_group_by)) |>
+    mutate(
+      percent = 100 * (weighted_count / sum(weighted_count, na.rm = TRUE))
+    ) |>
+    ungroup()
+}
+
+
+
+
+
+
 
 
 #' Calculate the Difference in Means Between Two Datasets
