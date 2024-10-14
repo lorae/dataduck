@@ -60,8 +60,10 @@ crosstab_mean <- function(data, value, weight, group_by) {
       total_value_weighted = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
       weighted_count = sum(!!sym(weight), na.rm = TRUE),
       count = n(),
-      weighted_mean = total_value_weighted / weighted_count,
       .groups = "drop"
+    ) |>
+    mutate(
+      weighted_mean = total_value_weighted / weighted_count
     ) |>
     select(-total_value_weighted)
 }
