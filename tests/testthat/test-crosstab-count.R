@@ -71,3 +71,30 @@ test_that("crosstab_count produces correct count results on database, with `ever
   dbDisconnect(con, shutdown = TRUE)
 })
 
+test_that("crosstab_count produces correct count results on database, with `every_combo` set to FALSE.", {
+  
+  # Create in-memory DuckDB instance and load test input data
+  con <- dbConnect(duckdb::duckdb(), ":memory:")
+  dbWriteTable(con, "input", input_tb, overwrite = TRUE)
+  
+  # Compute weighted and unweighted counts using DuckDB table
+  output_tb <- crosstab_count(
+    data = tbl(con, "input"),
+    weight = "PERWT",
+    group_by = c("AGE_bucket", "RACE_ETH_bucket"),
+    every_combo = FALSE
+  ) |> collect()
+  
+  # Round and arrange output for comparison
+  output_tb <- output_tb |>
+    arrange(AGE_bucket, RACE_ETH_bucket)
+  
+  expected_tb <- expected_tb |>
+    arrange(AGE_bucket, RACE_ETH_bucket)
+  
+  # Compare results
+  expect_equal(output_tb, expected_tb)
+  
+  dbDisconnect(con, shutdown = TRUE)
+})
+
