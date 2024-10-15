@@ -50,13 +50,13 @@ expected_byrace_tb <- tribble(
 
 # ----- Unit tests ----- #
 
-test_that("crosstab_mean produces correct weighted mean results on database with every_combo = FALSE, grouped by AGE_bucket", {
+test_that("crosstab_percent produces correct weighted mean results on database with every_combo = FALSE, grouped by AGE_bucket", {
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
   dbWriteTable(con, "input", input_tb, overwrite = TRUE)
   
-  # Compute weighted mean using DuckDB table
+  # Compute percentages using DuckDB table
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
     weight = "PERWT",
@@ -73,22 +73,19 @@ test_that("crosstab_mean produces correct weighted mean results on database with
     mutate(percent = round(percent, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
-  print(expected_byage_tb)
-  print(output_tb)
-  
   # Compare results
   expect_equal(output_tb, expected_byage_tb)
   
   dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("crosstab_mean produces correct weighted mean results on database with every_combo = TRUE, grouped by AGE_bucket", {
+test_that("crosstab_percent produces correct weighted mean results on database with every_combo = TRUE, grouped by AGE_bucket", {
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
   dbWriteTable(con, "input", input_tb, overwrite = TRUE)
   
-  # Compute weighted mean using DuckDB table
+  # Compute percentages using DuckDB table
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
     weight = "PERWT",
@@ -106,22 +103,19 @@ test_that("crosstab_mean produces correct weighted mean results on database with
     mutate(percent = round(percent, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
-  print(expected_byage_combo_tb)
-  print(output_tb)
-  
   # Compare results
   expect_equal(output_tb, expected_byage_combo_tb)
   
   dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("crosstab_mean produces correct weighted mean results on database with every_combo = FALSE, grouped by RACE_ETH_bucket", {
+test_that("crosstab_percent produces correct weighted mean results on database with every_combo = FALSE, grouped by RACE_ETH_bucket", {
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
   dbWriteTable(con, "input", input_tb, overwrite = TRUE)
   
-  # Compute weighted mean using DuckDB table
+  # Compute percentages using DuckDB table
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
     weight = "PERWT",
@@ -138,18 +132,15 @@ test_that("crosstab_mean produces correct weighted mean results on database with
     mutate(percent = round(percent, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
-  print(expected_byrace_tb)
-  print(output_tb)
-  
   # Compare results
   expect_equal(output_tb, expected_byrace_tb)
   
   dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("crosstab_mean produces correct weighted mean results on tibble with every_combo = FALSE, grouped by RACE_ETH_bucket", {
+test_that("crosstab_percent produces correct weighted mean results on tibble with every_combo = FALSE, grouped by RACE_ETH_bucket", {
 
-  # Compute weighted mean using DuckDB table
+  # Compute percentages on tibble input
   output_tb <- crosstab_percent(
     data = input_tb,
     weight = "PERWT",
