@@ -126,7 +126,7 @@ crosstab_percent <- function(
   result <- result |> 
     group_by(!!!syms(percent_group_by)) |>
     mutate(
-      percent = weighted_count / sum(weighted_count, na.rm = TRUE)
+      percent = 100 * (weighted_count / sum(weighted_count, na.rm = TRUE))
     ) |>
     ungroup()
   

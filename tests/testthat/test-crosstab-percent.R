@@ -20,32 +20,32 @@ input_tb <- read_csv("tests/test-data/crosstab-mean-inputs.csv")
 
 expected_byage_tb <- tribble(
   ~AGE_bucket, ~RACE_ETH_bucket, ~weighted_count, ~count, ~percent,
-  "r00_49",    "white",          65,              2,      0.1589242054,
-  "r00_49",    "black",          116,             2,      0.2836185819,
-  "r00_49",    "aapi",           228,             5,      0.5574572127,
-  "r50plus",   "black",          106,             3,      0.5170731707,
-  "r50plus",   "aian",           99,              2,      0.4829268293
+  "r00_49",    "white",          65,              2,      15.89242054,
+  "r00_49",    "black",          116,             2,      28.36185819,
+  "r00_49",    "aapi",           228,             5,      55.74572127,
+  "r50plus",   "black",          106,             3,      51.70731707,
+  "r50plus",   "aian",           99,              2,      48.29268293
 )
 
 expected_byage_combo_tb <- tribble(
   ~AGE_bucket, ~RACE_ETH_bucket, ~weighted_count, ~count, ~percent,
-  "r00_49",    "white",          65,              2,      0.1589242054,
-  "r00_49",    "black",          116,             2,      0.2836185819,
-  "r00_49",    "aapi",           228,             5,      0.5574572127,
+  "r00_49",    "white",          65,              2,      15.89242054,
+  "r00_49",    "black",          116,             2,      28.36185819,
+  "r00_49",    "aapi",           228,             5,      55.74572127,
   "r00_49",    "aian",           0,               0,      0,
   "r50plus",   "white",          0,               0,      0,
-  "r50plus",   "black",          106,             3,      0.5170731707,
+  "r50plus",   "black",          106,             3,      51.70731707,
   "r50plus",   "aapi",           0,               0,      0,
-  "r50plus",   "aian",           99,              2,      0.4829268293
+  "r50plus",   "aian",           99,              2,      48.29268293
 )
 
 expected_byrace_tb <- tribble(
   ~AGE_bucket, ~RACE_ETH_bucket, ~weighted_count, ~count, ~percent,
-  "r00_49",    "white",          65,              2,      1,
-  "r00_49",    "black",          116,             2,      0.5225225225,
-  "r00_49",    "aapi",           228,             5,      1,
-  "r50plus",   "black",          106,             3,      0.4774774775,
-  "r50plus",   "aian",           99,              2,      1
+  "r00_49",    "white",          65,              2,      100,
+  "r00_49",    "black",          116,             2,      52.25225225,
+  "r00_49",    "aapi",           228,             5,      100,
+  "r50plus",   "black",          106,             3,      47.74774775,
+  "r50plus",   "aian",           99,              2,      100
 )
 
 # ----- Unit tests ----- #
