@@ -39,8 +39,8 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
     weight = "PERWT",
-    group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
-    percent_group_by = c("AGE_bucket", "RACE_ETH_bucket")
+    group_by = c("AGE_bucket", "RACE_ETH_bucket"),
+    percent_group_by = c("AGE_bucket")
   ) |> collect()
   
   # Round and arrange output for comparison

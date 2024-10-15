@@ -96,7 +96,12 @@ crosstab_mean <- function(
 #' @return A tibble or database connection object containing the group-by columns and percentages for each group.
 #'
 #' @export
-crosstab_percent <- function(data, weight, group_by, percent_group_by) {
+crosstab_percent <- function(
+    data, 
+    weight, 
+    group_by, 
+    percent_group_by
+    ) {
   if (!all(percent_group_by %in% group_by)) {
     stop("All elements of 'percent_group_by' must be included in 'group_by'.")
   }
@@ -105,11 +110,12 @@ crosstab_percent <- function(data, weight, group_by, percent_group_by) {
     group_by(!!!syms(group_by)) |>
     summarize(
       weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      count = n(),
       .groups = "drop"
     ) |>
     group_by(!!!syms(percent_group_by)) |>
     mutate(
-      percent = 100 * (weighted_count / sum(weighted_count, na.rm = TRUE))
+      percent = weighted_count / sum(weighted_count, na.rm = TRUE)
     ) |>
     ungroup()
 }
