@@ -1,9 +1,13 @@
+#' Calculate Standard Errors
+
+
 #' Calculate Weighted and Unweighted Counts for Groups
 #'
 #' This function calculates the weighted count (sum of weights) and the unweighted count
 #' of observations for the specified weight column, grouped by the specified columns.
 #' Optionally, it can include all combinations of the grouping variables, even if some combinations
 #' do not exist in the data, setting the counts to zero for those combinations.
+#' Info on replicate weight standard erros: https://usa.ipums.org/usa/repwt.shtml
 #'
 #' @param data A data frame or a database connection object containing the data to be aggregated.
 #' @param weight A string specifying the name of the column containing the weights.
@@ -19,7 +23,8 @@ crosstab_count <- function(
     data,
     weight,
     group_by,
-    every_combo = FALSE
+    every_combo = FALSE,
+    repwts = paste0("REPWTP", sprintf("%d", 1:80)) # Expecting a vector of column names like c("REPWTP1", "REPWTP2", ..., "REPWTP80")
 ) {
 
     result <- data |>
