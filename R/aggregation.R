@@ -49,6 +49,17 @@ crosstab_count <- function(
   return(result)
 }
 
+calculate_se <- function(data) {
+  data |>
+    rowwise() |>
+    mutate(
+      # Calculate SE using replicate_weights and weighted_count for each row
+      standard_error = sqrt((4 / 80) * sum((unlist(c_across(starts_with("est_REPWTP"))) - weighted_count)^2, na.rm = TRUE))
+    ) |>
+    ungroup() |>
+    # Remove the est_REPWTPxx columns after SE calculation
+    select(-starts_with("est_REPWTP"))
+}
 
 
 #' Calculate Weighted Mean for Groups
