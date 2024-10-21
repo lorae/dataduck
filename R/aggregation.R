@@ -29,26 +29,16 @@ crosstab_count <- function(
     every_combo = FALSE,
     repwts = paste0("REPWTP", sprintf("%d", 1:80))
 ) {
+  
   # Calculate base results using full-sample weight and unweighted count
   result <- data |>
     group_by(across(all_of(group_by))) |>
     summarize(
       weighted_count = sum(!!sym(weight), na.rm = TRUE),
       count = n(),
-      # Create columns for each replicate weight
-      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "weighted_{.col}"),
+      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "est_{.col}"),
       .groups = "drop"
     )
-  
-  message("Base counts and replicate counts have been calculated.")
-  
-  # Apply the se() function using mutate after collecting values
-  result <- result |>
-    rowwise() |>
-    mutate(
-      standard_error = se(weighted_count, c_across(starts_with("weighted_REPWTP")))
-    ) |>
-    ungroup()
   
   # Conditionally include all combinations of grouping variables
   if (every_combo) {
@@ -58,6 +48,8 @@ crosstab_count <- function(
   
   return(result)
 }
+
+
 
 #' Calculate Weighted Mean for Groups
 #'
