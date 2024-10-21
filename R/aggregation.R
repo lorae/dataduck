@@ -40,46 +40,17 @@ crosstab_count <- function(
       complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0, standard_error = NA))
   }
   
-  return(result)
-}
-
-#' Calculate Standard Errors for Replicate Weight Estimates
-#'
-#' This function calculates the standard error of an estimate using replicate weights, based on the replicate weights calculated by `crosstab_count()`, `crosstab_mean()`, or `crosstab_percent()`.
-#' The function assumes that the replicate weight columns follow the naming convention starting with "est_" (e.g., "est_REPWTP1" to "est_REPWTP80").
-#' Once the standard errors are calculated, the replicate weight columns are removed from the output.
-#' 
-#' This function should be chained with the output from `crosstab_count()`, `crosstab_mean()`, or `crosstab_percent()` and run after the result has been collected into memory using `collect()`.
-#'
-#' @param data A data frame or tibble containing the weighted counts and replicate weight estimates.
-#' @param estimate A string specifying the name of the main estimate column (e.g., "weighted_count").
-#'
-#' @return A tibble containing the original data with an additional `standard_error` column and without the replicate weight columns.
-#'
-#' @export
-#'
-#' @examples
-#' # Example of chaining the functions
-#' result <- crosstab_count(data = ipums_relate |> filter(YEAR == 2022),
-#'                          weight = "PERWT",
-#'                          group_by = c("AGE_bucket", "cohabit_bin"),
-#'                          every_combo = FALSE) |>
-#'            collect() |>
-#'            calculate_se("weighted_count")
-calculate_se <- function(
-    data,
-    estimate
-    ) {
-  
-  data |>
+  # Calculate standard errors using estimate columns from replicate weights
+  result <- result |>
+    collect() |> # must collect in order for following operations to work
     rowwise() |>
     mutate(
-      # Calculate SE using replicate_weights and weighted_count for each row
-      standard_error = sqrt((4 / 80) * sum((unlist(c_across(starts_with("est_"))) - !!sym(estimate))^2, na.rm = TRUE))
+      standard_error = sqrt((4 / 80) * sum((unlist(c_across(starts_with("est_"))) - weighted_count)^2, na.rm = TRUE))
     ) |>
     ungroup() |>
-    # Remove the est_REPWTPxx columns after SE calculation
-    select(-starts_with("est_"))
+    select(-starts_with("est_")) # Remove unneeded intermediate calculations
+  
+  return(result)
 }
 
 
@@ -123,12 +94,6 @@ crosstab_mean <- function(
   }
   
   return(result)
-}
-
-# Standard error
-# Define the function to calculate se(x)
-se <- function(x, z) {
-  sqrt((4/80) * sum((z - x)^2))
 }
 
 
