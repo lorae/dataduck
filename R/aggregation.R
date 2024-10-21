@@ -1,5 +1,7 @@
 #' Calculate Standard Errors
-
+se <- function(x, z) {
+  sqrt((4/80) * sum((z - x)^2))
+}
 
 #' Calculate Weighted and Unweighted Counts for Groups
 #'
@@ -7,7 +9,7 @@
 #' of observations for the specified weight column, grouped by the specified columns.
 #' Optionally, it can include all combinations of the grouping variables, even if some combinations
 #' do not exist in the data, setting the counts to zero for those combinations.
-#' Info on replicate weight standard erros: https://usa.ipums.org/usa/repwt.shtml
+#' Info on replicate weight standard errors: https://usa.ipums.org/usa/repwt.shtml
 #'
 #' @param data A data frame or a database connection object containing the data to be aggregated.
 #' @param weight A string specifying the name of the column containing the weights.
@@ -16,7 +18,7 @@
 #'   setting counts to zero for combinations not present in the data. Defaults to `FALSE`.
 #'
 #' @return A tibble or database connection object containing the group-by columns, weighted count,
-#'   and unweighted count for each group.
+#'   unweighted count, and replicate weight standard errors for each group.
 #'
 #' @export
 crosstab_count <- function(
@@ -32,18 +34,18 @@ crosstab_count <- function(
     summarize(
       weighted_count = sum(!!sym(weight), na.rm = TRUE),
       count = n(),
+      # Loop through replicate weights and calculate the weighted count for each
+      replicate_counts = list(map(repwts, ~ sum(!!sym(.x), na.rm = TRUE))),
       .groups = "drop"
     )
-  message("Base counts have been calculated.")
+  message("Base counts and replicate counts have been calculated.")
   
-  # Add replicate weights as columns to the result data frame
-  for (rep_weight in repwts) {
-    result[[paste0("weighted_rep_count_", rep_weight)]] <- data |>
-      group_by(across(all_of(group_by))) |>
-      summarize(weighted_rep_count = sum(!!sym(rep_weight), na.rm = TRUE), .groups = "drop") |>
-      pull(weighted_rep_count)
-  }
-  message(paste0("Replicate weight counts have been calculated for all ", length(repwts), " replicate weight columns."))
+  # Apply the se() function to calculate the standard error
+  result <- result |>
+    rowwise() |>
+    mutate(
+      standard_error = se(weighted_count, unlist(replicate_counts))
+    )
   
   # Conditionally include all combinations of grouping variables
   if (every_combo) {
@@ -51,12 +53,8 @@ crosstab_count <- function(
       complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0, standard_error = NA))
   }
   
-  # Drop the replicate columns if they are not needed for the final result
-  result <- result %>% select(-starts_with("weighted_rep_count_"))
-  
   return(result)
 }
-
 
 #' Calculate Weighted Mean for Groups
 #'
@@ -99,6 +97,13 @@ crosstab_mean <- function(
   
   return(result)
 }
+
+# Standard error
+# Define the function to calculate se(x)
+se <- function(x, z) {
+  sqrt((4/80) * sum((z - x)^2))
+}
+
 
 #' Calculate Percentages Within Groups
 #'
