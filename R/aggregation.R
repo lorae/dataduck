@@ -1,6 +1,7 @@
 #' Calculate Standard Errors
-se <- function(x, z) {
-  sqrt((4/80) * sum((z - x)^2))
+se <- function(main_weight, ...) {
+  replicate_weights <- c(...)
+  sqrt((4/80) * sum((replicate_weights - main_weight)^2, na.rm = TRUE))
 }
 
 #' Calculate Weighted and Unweighted Counts for Groups
@@ -26,26 +27,28 @@ crosstab_count <- function(
     weight,
     group_by,
     every_combo = FALSE,
-    repwts = paste0("REPWTP", sprintf("%d", 1:80)) # Expecting a vector of column names like c("REPWTP1", "REPWTP2", ..., "REPWTP80")
+    repwts = paste0("REPWTP", sprintf("%d", 1:80))
 ) {
-  # Calculate base results using full-sample weight
+  # Calculate base results using full-sample weight and unweighted count
   result <- data |>
     group_by(across(all_of(group_by))) |>
     summarize(
       weighted_count = sum(!!sym(weight), na.rm = TRUE),
       count = n(),
-      # Loop through replicate weights and calculate the weighted count for each
-      replicate_counts = list(map(repwts, ~ sum(!!sym(.x), na.rm = TRUE))),
+      # Create columns for each replicate weight
+      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "weighted_{.col}"),
       .groups = "drop"
     )
+  
   message("Base counts and replicate counts have been calculated.")
   
-  # Apply the se() function to calculate the standard error
+  # Apply the se() function using mutate after collecting values
   result <- result |>
     rowwise() |>
     mutate(
-      standard_error = se(weighted_count, unlist(replicate_counts))
-    )
+      standard_error = se(weighted_count, c_across(starts_with("weighted_REPWTP")))
+    ) |>
+    ungroup()
   
   # Conditionally include all combinations of grouping variables
   if (every_combo) {
