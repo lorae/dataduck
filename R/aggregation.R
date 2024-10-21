@@ -26,21 +26,33 @@ crosstab_count <- function(
     every_combo = FALSE,
     repwts = paste0("REPWTP", sprintf("%d", 1:80)) # Expecting a vector of column names like c("REPWTP1", "REPWTP2", ..., "REPWTP80")
 ) {
-
-    result <- data |>
-    group_by(!!!syms(group_by)) |>
+  # Calculate base results using full-sample weight
+  result <- data |>
+    group_by(across(all_of(group_by))) |>
     summarize(
       weighted_count = sum(!!sym(weight), na.rm = TRUE),
       count = n(),
       .groups = "drop"
     )
+  message("Base counts have been calculated.")
+  
+  # Add replicate weights as columns to the result data frame
+  for (rep_weight in repwts) {
+    result[[paste0("weighted_rep_count_", rep_weight)]] <- data |>
+      group_by(across(all_of(group_by))) |>
+      summarize(weighted_rep_count = sum(!!sym(rep_weight), na.rm = TRUE), .groups = "drop") |>
+      pull(weighted_rep_count)
+  }
+  message(paste0("Replicate weight counts have been calculated for all ", length(repwts), " replicate weight columns."))
   
   # Conditionally include all combinations of grouping variables
   if (every_combo) {
-    # Use complete to fill in missing combinations
     result <- result |>
-      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0, weighted_mean = NA))
+      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0, standard_error = NA))
   }
+  
+  # Drop the replicate columns if they are not needed for the final result
+  result <- result %>% select(-starts_with("weighted_rep_count_"))
   
   return(result)
 }
