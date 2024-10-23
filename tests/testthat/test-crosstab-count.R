@@ -65,9 +65,6 @@ test_that("crosstab_count produces correct count results on database, with `ever
     mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
 
-  print(output_tb)
-  print(expected_combo_tb)
-  
   # Compare results
   expect_equal(output_tb, expected_combo_tb)
   
