@@ -115,7 +115,8 @@ crosstab_percent <- function(
     weight, 
     group_by, 
     percent_group_by,
-    every_combo = FALSE
+    every_combo = FALSE,
+    repwts = paste0("REPWTP", sprintf("%d", 1:80))
     ) {
   if (!all(percent_group_by %in% group_by)) {
     stop("All elements of 'percent_group_by' must be included in 'group_by'.")
@@ -125,6 +126,7 @@ crosstab_percent <- function(
     group_by(!!!syms(group_by)) |>
     summarize(
       weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "weighted_count_{.col}"),
       count = n(),
       .groups = "drop"
     )
@@ -136,13 +138,32 @@ crosstab_percent <- function(
       complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0))
   }  
   
+  result <- result |>
+    collect()
+  
   # Now add the percent column
   result <- result |> 
     group_by(!!!syms(percent_group_by)) |>
     mutate(
-      percent = 100 * (weighted_count / sum(weighted_count, na.rm = TRUE))
+      # Main percentage
+      percent = 100 * (weighted_count / sum(weighted_count, na.rm = TRUE)),
+      # Replicate percentages
+      across(starts_with("weighted_count_REPWTP"), 
+             ~ 100 * (.x / sum(.x, na.rm = TRUE)), 
+             .names = "percent_{.col}")
     ) |>
     ungroup()
+  
+  # Calculate standard error of the percentages
+  result <- result |>
+    rowwise() |>
+    mutate(
+      # Standard error calculation for the percentage
+      percent_standard_error = sqrt((4 / 80) * sum((c_across(starts_with("percent_weighted_count_REPWTP")) - percent)^2, na.rm = TRUE))
+    ) |>
+    ungroup() |>
+    # Remove the intermediate replicate percentage columns
+    select(-starts_with("percent_weighted_count_REPWTP"), -starts_with("weighted_count_REPWTP"))
   
   return(result)
 }
