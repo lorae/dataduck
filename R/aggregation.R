@@ -34,12 +34,6 @@ crosstab_count <- function(
       .groups = "drop"
     )
   
-  # Conditionally include all combinations of grouping variables
-  if (every_combo) {
-    result <- result |>
-      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0, standard_error = NA))
-  }
-  
   # Calculate standard errors using estimate columns from replicate weights
   result <- result |>
     collect() |> # must collect in order for following operations to work
@@ -49,6 +43,12 @@ crosstab_count <- function(
     ) |>
     ungroup() |>
     select(-starts_with("est_")) # Remove unneeded intermediate calculations
+  
+  # Conditionally include all combinations of grouping variables
+  if (every_combo) {
+    result <- result |>
+      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0, standard_error = NA))
+  }
   
   return(result)
 }
