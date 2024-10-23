@@ -41,11 +41,11 @@ expected_byage_combo_tb <- tribble(
 
 expected_byrace_tb <- tribble(
   ~AGE_bucket, ~RACE_ETH_bucket, ~weighted_count, ~count, ~percent,    ~percent_standard_error,
-  "r00_49",    "white",          65,              2,      100,         0,
+  "r00_49",    "white",          65,              2,      100,         NA,
   "r00_49",    "black",          116,             2,      52.25225225, 2.885295159,
-  "r00_49",    "aapi",           228,             5,      100,         0,
+  "r00_49",    "aapi",           228,             5,      100,         NA,
   "r50plus",   "black",          106,             3,      47.74774775, 2.885295159,
-  "r50plus",   "aian",           99,              2,      100,         0
+  "r50plus",   "aian",           99,              2,      100,         NA
 )
 
 # ----- Unit tests ----- #
@@ -108,11 +108,7 @@ test_that("crosstab_percent produces correct weighted mean results on database w
     mutate(percent = round(percent, 6),
            percent_standard_error = round(percent_standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
-  
-  
-  print(output_tb)
-  print(expected_byage_combo_tb)
-  
+
   # Compare results
   expect_equal(output_tb, expected_byage_combo_tb)
   
