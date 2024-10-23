@@ -165,6 +165,13 @@ crosstab_percent <- function(
     # Remove the intermediate replicate percentage columns
     select(-starts_with("percent_weighted_count_REPWTP"), -starts_with("weighted_count_REPWTP"))
   
+  # Percentages of 0 and 100 are going to have (misleading) percent_standard_error 
+  # measurements of 0. Correct these observations to NA.
+  result <- result |>
+    mutate(
+      percent_standard_error = if_else(percent == 0 | percent == 100, NA_real_, percent_standard_error)
+    )
+
   return(result)
 }
 

@@ -111,7 +111,7 @@ test_that("crosstab_percent produces correct weighted mean results on database w
   
   
   print(output_tb)
-  print(expected_byage_tb)
+  print(expected_byage_combo_tb)
   
   # Compare results
   expect_equal(output_tb, expected_byage_combo_tb)
