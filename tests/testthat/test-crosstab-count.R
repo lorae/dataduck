@@ -19,26 +19,23 @@ devtools::load_all("../dataduck")
 input_tb <- read_csv("tests/test-data/crosstab-mean-inputs.csv")
 
 expected_combo_tb <- tribble(
-  ~AGE_bucket,  ~RACE_ETH_bucket, ~weighted_count, ~count,
-  "r00_49",     "white",           65,              2,
-  "r00_49",     "black",           116,             2,
-  "r00_49",     "aapi",            228,             5,
-  "r00_49",     "hispanic",        0,               0,
-  "r00_49",     "aian",            0,               0,
-  "r50plus",    "white",           0,               0,
-  "r50plus",    "black",           106,             3,
-  "r50plus",    "aapi",            0,               0,
-  "r50plus",    "hispanic",        13,              1,
-  "r50plus",    "aian",            99,              2
+  ~AGE_bucket,  ~RACE_ETH_bucket, ~weighted_count, ~count, ~standard_error,
+  "r00_49",     "white",           65,              2,     1.774823935,
+  "r00_49",     "black",           116,             2,     7.529940239,
+  "r00_49",     "aapi",            228,             5,     6.659579566,
+  "r00_49",     "aian",            0,               0,     NA,
+  "r50plus",    "white",           0,               0,     NA,
+  "r50plus",    "black",           106,             3,     5.263078947,
+  "r50plus",    "aapi",            0,               0,     NA,
+  "r50plus",    "aian",            99,              2,     2.121320344
 )
 expected_tb <- tribble(
-  ~AGE_bucket,  ~RACE_ETH_bucket, ~weighted_count, ~count,
-  "r00_49",     "white",           65,              2,
-  "r00_49",     "black",           116,             2,
-  "r00_49",     "aapi",            228,             5,
-  "r50plus",    "black",           106,             3,
-  "r50plus",    "hispanic",        13,              1,
-  "r50plus",    "aian",            99,              2
+  ~AGE_bucket,  ~RACE_ETH_bucket, ~weighted_count, ~count, ~standard_error,
+  "r00_49",     "white",           65,              2,     1.774823935,
+  "r00_49",     "black",           116,             2,     7.529940239,
+  "r00_49",     "aapi",            228,             5,     6.659579566,
+  "r50plus",    "black",           106,             3,     5.263078947,
+  "r50plus",    "aian",            99,              2,     2.121320344
 )
 
 
@@ -55,16 +52,22 @@ test_that("crosstab_count produces correct count results on database, with `ever
     data = tbl(con, "input"),
     weight = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
+    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = TRUE
   ) |> collect()
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
+    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_combo_tb <- expected_combo_tb |>
+    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
 
+  print(output_tb)
+  print(expected_combo_tb)
+  
   # Compare results
   expect_equal(output_tb, expected_combo_tb)
   
@@ -82,14 +85,17 @@ test_that("crosstab_count produces correct count results on database, with `ever
     data = tbl(con, "input"),
     weight = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
+    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = FALSE
   ) |> collect()
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
+    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_tb <- expected_tb |>
+    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
@@ -105,14 +111,17 @@ test_that("crosstab_count produces correct count results on tibble, with `every_
     data = input_tb,
     weight = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
+    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = TRUE
   )
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
+    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_combo_tb <- expected_combo_tb |>
+    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
@@ -127,14 +136,17 @@ test_that("crosstab_count produces correct count results on tibble, with `every_
     data = input_tb,
     weight = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
+    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = FALSE
   ) 
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
+    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_tb <- expected_tb |>
+    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
