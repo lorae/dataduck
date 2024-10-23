@@ -71,20 +71,47 @@ crosstab_mean <- function(
     value, 
     weight, 
     group_by,
-    every_combo = FALSE
+    every_combo = FALSE,
+    repwts = paste0("REPWTP", sprintf("%d", 1:80))
 ) {
   result <- data |>
     group_by(!!!syms(group_by)) |>
     summarize(
+      # Calculate the weighted count of each row and the sum of all observations in that group
       total_value_weighted = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
       weighted_count = sum(!!sym(weight), na.rm = TRUE),
       count = n(),
+      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "weighted_count_{.col}"),
+      across(all_of(repwts), ~sum(!!sym(value) * .x, na.rm = TRUE), .names = "tvw_{.col}"),
       .groups = "drop"
     ) |>
+    collect() # must collect in order for following operations to work
+  
+  result <- result |>
     mutate(
-      weighted_mean = total_value_weighted / weighted_count
+      weighted_mean = total_value_weighted / weighted_count,
+
+      # Calculate weighted_mean_{.col} for each replicate weight
+      across(
+        .cols = starts_with("tvw_"),
+        .fns = ~ .x / get(str_replace(cur_column(), "tvw_", "weighted_count_")),
+        .names = "weighted_mean_{.col}"
+      )
     ) |>
-    select(-total_value_weighted)
+    select(
+      -total_value_weighted, 
+      -starts_with("weighted_count_"), 
+      -starts_with("tvw_")
+      ) 
+  
+  # Calculate standard errors using estimated weighted mean columns from replicate weights
+  result <- result |>
+    rowwise() |>
+    mutate(
+      standard_error = sqrt((4 / 80) * sum((unlist(c_across(starts_with("weighted_mean_tvw_"))) - weighted_mean)^2, na.rm = TRUE))
+    ) |>
+    ungroup() |>
+    select(-starts_with("weighted_mean_tvw_")) # Remove unneeded intermediate calculations
   
   # Conditionally include all combinations of grouping variables
   if (every_combo) {
