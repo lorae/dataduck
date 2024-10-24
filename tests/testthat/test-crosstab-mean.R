@@ -7,6 +7,7 @@ library("duckdb")
 library("tibble")
 library("dplyr")
 library("tidyr")
+library("stringr")
 
 # Set working directory to project root
 root <- find_root(is_rstudio_project)
@@ -19,32 +20,32 @@ devtools::load_all("../dataduck")
 input_tb <- read_csv("tests/test-data/crosstab-mean-inputs.csv")
 
 expected_tb <- tribble(
-  ~HHINCOME_bucket, ~AGE_bucket, ~RACE_ETH_bucket, ~weighted_count, ~count, ~weighted_mean,
-  "r000_100k",      "r00_49",    "white",          65,              2,      2.6,
-  "r000_100k",      "r00_49",    "black",          116,             2,      2.612068966,
-  "r000_100k",      "r50plus",   "black",          106,             3,      1.877358491,
-  "r000_100k",      "r50plus",   "aian",           99,              2,      1.656565657,
-  "r100kplus",      "r00_49",    "aapi",           228,             5,      5
+  ~HHINCOME_bucket, ~AGE_bucket, ~RACE_ETH_bucket, ~weighted_count, ~count, ~weighted_mean, ~mean_standard_error,
+  "r000_100k",      "r00_49",    "white",          65,              2,      2.6,            0.021406248,
+  "r000_100k",      "r00_49",    "black",          116,             2,      2.612068966,    0.020800555,
+  "r000_100k",      "r50plus",   "black",          106,             3,      1.877358491,    0.018993141,
+  "r000_100k",      "r50plus",   "aian",           99,              2,      1.656565657,    0.013876558,
+  "r100kplus",      "r00_49",    "aapi",           228,             5,      5,              0              
 )
 
 expected_combo_tb <- tribble(
-  ~HHINCOME_bucket, ~AGE_bucket, ~RACE_ETH_bucket, ~weighted_count, ~count, ~weighted_mean,
-  "r000_100k",      "r00_49",    "white",          65,              2,      2.6,
-  "r000_100k",      "r00_49",    "black",          116,             2,      2.612068966,
-  "r000_100k",      "r00_49",    "aapi",           0,               0,      NA,
-  "r000_100k",      "r00_49",    "aian",           0,               0,      NA,
-  "r000_100k",      "r50plus",   "white",          0,               0,      NA,
-  "r000_100k",      "r50plus",   "black",          106,             3,      1.877358491,
-  "r000_100k",      "r50plus",   "aapi",           0,               0,      NA,
-  "r000_100k",      "r50plus",   "aian",           99,              2,      1.656565657,
-  "r100kplus",      "r00_49",    "white",          0,               0,      NA,
-  "r100kplus",      "r00_49",    "black",          0,               0,      NA,
-  "r100kplus",      "r00_49",    "aapi",           228,             5,      5,
-   "r100kplus",      "r00_49",    "aian",           0,               0,      NA,
-  "r100kplus",      "r50plus",   "white",          0,               0,      NA,
-  "r100kplus",      "r50plus",   "black",          0,               0,      NA,
-  "r100kplus",      "r50plus",   "aapi",           0,               0,      NA,
-  "r100kplus",      "r50plus",   "aian",           0,               0,      NA
+  ~HHINCOME_bucket, ~AGE_bucket, ~RACE_ETH_bucket, ~weighted_count, ~count, ~weighted_mean, ~mean_standard_error,
+  "r000_100k",      "r00_49",    "white",          65,              2,      2.6,            0.021406248,
+  "r000_100k",      "r00_49",    "black",          116,             2,      2.612068966,    0.020800555,
+  "r000_100k",      "r00_49",    "aapi",           0,               0,      NA,             NA,
+  "r000_100k",      "r00_49",    "aian",           0,               0,      NA,             NA,
+  "r000_100k",      "r50plus",   "white",          0,               0,      NA,             NA,
+  "r000_100k",      "r50plus",   "black",          106,             3,      1.877358491,    0.018993141,
+  "r000_100k",      "r50plus",   "aapi",           0,               0,      NA,             NA,
+  "r000_100k",      "r50plus",   "aian",           99,              2,      1.656565657,    0.013876558,
+  "r100kplus",      "r00_49",    "white",          0,               0,      NA,             NA,
+  "r100kplus",      "r00_49",    "black",          0,               0,      NA,             NA,
+  "r100kplus",      "r00_49",    "aapi",           228,             5,      5,              0,     
+  "r100kplus",      "r00_49",    "aian",           0,               0,      NA,             NA,
+  "r100kplus",      "r50plus",   "white",          0,               0,      NA,             NA,
+  "r100kplus",      "r50plus",   "black",          0,               0,      NA,             NA,
+  "r100kplus",      "r50plus",   "aapi",           0,               0,      NA,             NA,
+  "r100kplus",      "r50plus",   "aian",           0,               0,      NA,             NA
 )
 
 
@@ -62,6 +63,7 @@ test_that("crosstab_mean produces correct weighted mean results on database with
     value = "NUMPREC",
     weight = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
+    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = FALSE
   ) |> collect()
   
@@ -92,6 +94,7 @@ test_that("crosstab_mean produces correct weighted mean results on database with
     value = "NUMPREC",
     weight = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
+    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = TRUE
   ) |> collect()
   
@@ -118,6 +121,7 @@ test_that("crosstab_mean produces correct weighted mean results on tibble with e
     value = "NUMPREC",
     weight = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
+    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = FALSE
   )
   
@@ -143,6 +147,7 @@ test_that("crosstab_mean produces correct weighted mean results on tibble with e
     value = "NUMPREC",
     weight = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
+    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = TRUE
   )
   
