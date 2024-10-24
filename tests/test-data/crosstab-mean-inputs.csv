@@ -1,0 +1,15 @@
+HHINCOME_bucket,AGE_bucket,RACE_ETH_bucket,SEX,NUMPREC,PERWT,REPWTP1,REPWTP2,REPWTP3,REPWTP4
+r000_100k,r00_49,white,1,3,39,40,45,35,33
+r000_100k,r50plus,black,2,3,30,40,33,29,32
+r000_100k,r00_49,black,2,3,71,59,66,70,67
+r100kplus,r00_49,aapi,1,5,50,45,49,52,43
+r100kplus,r00_49,aapi,2,5,35,35,34,44,36
+r100kplus,r00_49,aapi,1,5,41,43,44,44,44
+r100kplus,r00_49,aapi,1,5,42,39,50,60,40
+r100kplus,r00_49,aapi,2,5,60,55,50,55,59
+r000_100k,r50plus,black,2,1,43,46,43,42,42
+r000_100k,r50plus,aian,2,2,65,66,60,70,68
+r000_100k,r00_49,black,2,2,45,25,44,41,42
+r000_100k,r50plus,aian,2,1,34,29,36,37,30
+r000_100k,r00_49,white,1,2,26,24,26,25,31
+r000_100k,r50plus,black,2,2,33,43,30,32,28

@@ -1,47 +1,214 @@
-#' Calculate Weighted Mean
+#' Calculate Weighted and Unweighted Counts for Groups
 #'
-#' This function calculates the weighted mean, sum of weights, and count of observations
-#' for a given value column, grouped by specified columns. The function can handle 
-#' both data frames and database pointers.
+#' This function calculates the weighted count (sum of weights) and the unweighted count
+#' of observations for the specified weight column, grouped by the specified columns.
+#' Optionally, it can include all combinations of the grouping variables, even if some combinations
+#' do not exist in the data, setting the counts to zero for those combinations.
+#' Info on replicate weight standard errors: https://usa.ipums.org/usa/repwt.shtml
 #'
-#' @param data A data frame or a database connection object. The data containing the 
-#'   value, weight, and grouping columns.
-#' @param value_column A string specifying the name of the column containing the values
-#'   to be averaged.
-#' @param weight_column A string specifying the name of the column containing the weights.
-#' @param group_by_columns A character vector of column names to group by.
+#' @param data A data frame or a database connection object containing the data to be aggregated.
+#' @param weight A string specifying the name of the column containing the weights.
+#' @param group_by A character vector of column names to group by.
+#' @param every_combo Logical, whether to include all combinations of the grouping variables,
+#'   setting counts to zero for combinations not present in the data. Defaults to `FALSE`.
 #'
-#' @return A tibble or database connection object containing the group-by columns, count of observations, sum of weights,
-#'   and the calculated weighted mean for each group.
+#' @return A tibble or database connection object containing the group-by columns, weighted count,
+#'   unweighted count, and replicate weight standard errors for each group.
 #'
 #' @export
-weighted_mean <- function(
-    data, 
-    value_column, 
-    weight_column, 
-    group_by_columns) {
+crosstab_count <- function(
+    data,
+    weight,
+    group_by,
+    every_combo = FALSE,
+    repwts = paste0("REPWTP", sprintf("%d", 1:80))
+) {
   
-  # Use quasiquotation to handle column names passed as strings
-  value_col <- sym(value_column)
-  weight_col <- sym(weight_column)
-  
-  # Dynamically reference grouping columns
-  group_by_cols <- syms(group_by_columns)
-  
-  # Calculate the weighted mean, sum of weights, and count of observations
-  data %>%
-    group_by(!!!group_by_cols) |>
+  # Calculate base results using full-sample weight and unweighted count
+  result <- data |>
+    group_by(across(all_of(group_by))) |>
     summarize(
-      total_value_weighted = sum(!!value_col * !!weight_col, na.rm = TRUE),
-      sum_weights = sum(!!weight_col, na.rm = TRUE),
-      count = n()
-      # Add weighted variance. Potential resources:
-      # https://stats.stackexchange.com/questions/51442/weighted-variance-one-more-time
-      # https://influentialpoints.com/Training/two-sample_t-test-principles-properties-assumptions.htm
+      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      count = n(),
+      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "est_{.col}"),
+      .groups = "drop"
+    )
+  
+  # Calculate standard errors using estimate columns from replicate weights
+  result <- result |>
+    collect() |> # must collect in order for following operations to work
+    rowwise() |>
+    mutate(
+      standard_error = sqrt((4 / 80) * sum((unlist(c_across(starts_with("est_"))) - weighted_count)^2, na.rm = TRUE))
     ) |>
-    mutate(weighted_mean = total_value_weighted / sum_weights) |>
-    select(!!!group_by_cols, count, sum_weights, weighted_mean)
+    ungroup() |>
+    select(-starts_with("est_")) # Remove unneeded intermediate calculations
+  
+  # Conditionally include all combinations of grouping variables
+  if (every_combo) {
+    result <- result |>
+      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0, standard_error = NA))
+  }
+  
+  return(result)
 }
+
+
+#' Calculate Weighted Mean for Groups
+#'
+#' This function calculates the weighted mean for the specified value and weight columns, grouped by the specified columns.
+#'
+#' @param data A data frame or a database connection object containing the data to be aggregated.
+#' @param value A string specifying the name of the column containing the values to be averaged.
+#' @param weight A string specifying the name of the column containing the weights.
+#' @param group_by A character vector of column names to group by.
+#'
+#' @return A tibble or database connection object containing the group-by columns and weighted mean for each group.
+#'
+#' @export
+crosstab_mean <- function(
+    data, 
+    value, 
+    weight, 
+    group_by,
+    every_combo = FALSE,
+    repwts = paste0("REPWTP", sprintf("%d", 1:80))
+) {
+  result <- data |>
+    group_by(!!!syms(group_by)) |>
+    summarize(
+      # Weighted sumproducts
+      weighted_sumprod = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
+      across(all_of(repwts), ~sum(!!sym(value) * .x, na.rm = TRUE), .names = "wsp_{.col}"),
+      # Weighted counts
+      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "wc_{.col}"),
+      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      count = n(),
+      .groups = "drop"
+    ) |>
+    collect() # must collect in order for following operations to work
+  
+  result <- result |>
+    mutate(
+      # Get the estimated weighted mean
+      weighted_mean = weighted_sumprod / weighted_count,
+
+      # Repeat this process for each repwt to get replicated estimated means
+      across(
+        .cols = starts_with("wsp_"),
+        .fns = ~ .x / get(str_replace(cur_column(), "wsp_", "wc_")),
+        .names = "weighted_mean_{.col}"
+      )
+    ) |>
+    select(
+      # Remove unneeded intermediate calculations
+      -weighted_sumprod,
+      -starts_with("wc_"),
+      -starts_with("wsp_")
+      )
+
+  # Calculate standard errors using estimated weighted mean and replicated estimated means
+  result <- result |>
+    rowwise() |>
+    mutate(
+      mean_standard_error = sqrt((4 / 80) * sum((unlist(c_across(starts_with("weighted_mean_wsp_"))) - weighted_mean)^2, na.rm = TRUE))
+    ) |>
+    ungroup() |>
+    # Remove unneeded intermediate calculations
+    select(-starts_with("weighted_mean_wsp_"))
+  
+  # Conditionally include all combinations of grouping variables
+  if (every_combo) {
+    result <- result |>
+      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0))
+  }
+  
+  return(result)
+}
+
+
+#' Calculate Percentages Within Groups
+#'
+#' This function calculates percentages of weighted counts within specified groups.
+#'
+#' @param data A data frame or a database connection object containing the data to be aggregated.
+#' @param weight A string specifying the name of the column containing the weights.
+#' @param group_by A character vector of column names to group by for the main counts.
+#' @param percent_group_by A character vector of column names to group by for the percentage calculation.
+#'   All elements of `percent_group_by` must be included in `group_by`.
+#'
+#' @return A tibble or database connection object containing the group-by columns and percentages for each group.
+#'
+#' @export
+crosstab_percent <- function(
+    data, 
+    weight, 
+    group_by, 
+    percent_group_by,
+    every_combo = FALSE,
+    repwts = paste0("REPWTP", sprintf("%d", 1:80))
+    ) {
+  if (!all(percent_group_by %in% group_by)) {
+    stop("All elements of 'percent_group_by' must be included in 'group_by'.")
+  }
+  
+  result <- data |>
+    group_by(!!!syms(group_by)) |>
+    summarize(
+      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "weighted_count_{.col}"),
+      count = n(),
+      .groups = "drop"
+    )
+  
+  # Conditionally include all combinations of grouping variables
+  if (every_combo) {
+    # Use complete to fill in missing combinations
+    result <- result |>
+      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0))
+  }  
+  
+  result <- result |>
+    collect()
+  
+  # Now add the percent column
+  result <- result |> 
+    group_by(!!!syms(percent_group_by)) |>
+    mutate(
+      # Main percentage
+      percent = 100 * (weighted_count / sum(weighted_count, na.rm = TRUE)),
+      # Replicate percentages
+      across(starts_with("weighted_count_REPWTP"), 
+             ~ 100 * (.x / sum(.x, na.rm = TRUE)), 
+             .names = "percent_{.col}")
+    ) |>
+    ungroup()
+  
+  # Calculate standard error of the percentages
+  result <- result |>
+    rowwise() |>
+    mutate(
+      # Standard error calculation for the percentage
+      percent_standard_error = sqrt((4 / 80) * sum((c_across(starts_with("percent_weighted_count_REPWTP")) - percent)^2, na.rm = TRUE))
+    ) |>
+    ungroup() |>
+    # Remove the intermediate replicate percentage columns
+    select(-starts_with("percent_weighted_count_REPWTP"), -starts_with("weighted_count_REPWTP"))
+  
+  # Percentages of 0 and 100 are going to have (misleading) percent_standard_error 
+  # measurements of 0. Correct these observations to NA.
+  result <- result |>
+    mutate(
+      percent_standard_error = if_else(percent == 0 | percent == 100, NA_real_, percent_standard_error)
+    )
+
+  return(result)
+}
+
+
+
+
+
 
 
 

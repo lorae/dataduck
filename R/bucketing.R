@@ -7,143 +7,6 @@
 # Proof-of-concept matching ranges in a lookup table using non-database data
 # https://stackoverflow.com/questions/75629990/lookup-table-in-r-by-matching-ranges
 
-#' Bucket Data Based on Ranges in a Lookup Table
-#'
-#' This function creates custom buckets for continuous variables based on a range-based lookup table.
-#' It appends a new column to the input data with the assigned bucket for each row.
-#' The lookup table must have columns: `bucket_name`, `lower_bound`, and `upper_bound`.
-#'
-#' @param data A dataframe, tibble, or db object containing the input data to be bucketed.
-#' @param lookup A dataframe, tibble, or db object containing the lookup table with bucket ranges.
-#' @param input_column The name of the column in `data` to be bucketed.
-#' @param output_column The name of the output column. Default is `{input_column}_bucket`.
-#'
-#' @return A dataframe, tibble, or db object with an additional column for the assigned bucket.
-#'
-#' @export
-range_match_lookup <- function(
-    data, # A dataframe, tibble, or db object containing the data
-    lookup, # A dataframe, tibble, or db object containing the lookup table
-    input_column, # The name of the column from `data` to be bucketed
-    output_column = NULL # optional: the name of the output column. Default: {input_column}_bucket
-) {
-  # TODO: build in data check on input object types being consistent w/ one another (db,db) or (df, df)
-  # TODO: build in check verifying that lookup table ranges don't overlap.
-  # That will be fun math problem to solve.
-  # TODO: build in check that colnames match. Add warning if any extra columns in lookup table and say
-  # that they will be unused, listing the colnames.
-  
-  # A function for bucketing data based on a simple range-based lookup table.
-  # Returns the input data with an appended column named `output_column`.
-  # Ranges are inclusive on the bottom end and exclusive on the top end.
-  # The lookup table must have colnames (bucket_name, lower_bound, upper_bound)
-  
-  # Rename the output_column  to default, if set to null
-  if(is.null(output_column)) {
-    output_column <- paste0(input_column, "_bucket")
-  }
-  
-  # Check if the lookup table is empty
-  if((lookup |> count() |> collect())$n == 0) {
-    
-    # Add a new column called output_column and assign all NA
-    result <- data |>
-      mutate(!!sym(output_column) := NA)
-    
-  } else {
-    result <- data |>
-      dplyr::inner_join(
-        lookup,
-        by = dplyr::join_by(
-          (!!rlang::sym(input_column)) >= lower_bound,
-          (!!rlang::sym(input_column)) < upper_bound
-        )
-      ) |>
-      dplyr::select(-lower_bound, -upper_bound) |>
-      dplyr::rename({{ output_column }} := bucket_name)
-  }
-  return(result)
-}
-
-#' Join Two Datasets on an ID Column with Prioritization
-#'
-#' This function joins two datasets by a common ID column. For a specified column, it prioritizes
-#' values from one dataset over the other. It removes duplicate columns from the output.
-#'
-#' @param data1 The deprioritized dataset.
-#' @param data2 The prioritized dataset.
-#' @param column The name of the column to prioritize and join on.
-#' @param id The name of the column uniquely identifying observations.
-#'
-#' @return A dataframe with the joined data and the `column` prioritized from `data2`.
-#'
-#' @export
-join_columns <- function(
-    data1,   # The deprioritized dataset
-    data2,   # The prioritized dataset
-    column,  # The name of the data column being joined (as a string)
-    id       # The name of the column uniquely identifying observations (as a string)
-){
-  # Join the two datasets on the id column
-  result <- data1 |>
-    left_join(data2, by = id, suffix = c("_data1", "_data2")) |>
-    mutate(
-      # Use the value from data2 if it's not NA; otherwise, use the value from data1
-      !!sym(column) := coalesce(!!sym(paste0(column, "_data2")), !!sym(paste0(column, "_data1")))
-    ) |>
-    # Remove the two versions of `column` used for the join, so that only
-    # the merged column remains
-    select(-!!sym(paste0(column, "_data1")), -!!sym(paste0(column, "_data2"))) |>
-    # Remove all `_data2` suffixed columns to delete all other duplicates
-    # Note: It would have been equally fine to remove all `_data1` columns instead,
-    # since we expect that these two input datasets were exactly identical except
-    # for the column called `column`
-    select(-ends_with("_data2")) |>
-    # Rename the columns ending in "_data1" back to their original names
-    rename_with(~ gsub("_data1$", "", .), ends_with("_data1"))
-    
-  
-  return(result)
-}
-
-#' Bucket Data Based on Specific Values in a Lookup Table
-#'
-#' This function creates custom buckets for categorical variables based on a value-based lookup table.
-#' It appends a new column to the input data with the assigned bucket for each row.
-#'
-#' @param data A dataframe, tibble, or db object containing the input data to be bucketed.
-#' @param lookup A dataframe, tibble, or db object containing the lookup table with specific values.
-#' @param input_column The name of the column in `data` to be bucketed.
-#' @param output_column The name of the output column. Default is `{input_column}_bucket`.
-#'
-#' @return A dataframe, tibble, or db object with an additional column for the assigned bucket.
-#'
-#' @export
-value_match_lookup <- function(
-    data, # A dataframe, tibble, or db object containing the data
-    lookup, # A dataframe, tibble, or db object containing the lookup table
-    input_column, # The name of the column from `data` to be bucketed
-    output_column = NULL # optional: the name of the output column. Default: {input_column}_bucket
-) {
-  # TODO: build in data check on input object types being consistent w/ one another (db,db) or (df, df)
-  # TODO: keep only the "specific_value" and "bucket_name"
-  
-  # Rename the output_column  to default, if set to null
-  if(is.null(output_column)) {
-    output_column <- paste0(input_column, "_bucket")
-  }
-  
-  result <- data |>
-    # For every unique row of data, a new row is generated combining it with the lookup table
-    left_join(lookup, by = setNames("specific_value", input_column)) |>
-    rename(!!sym(output_column) := bucket_name)
-  # Then only the rows of the lookup table that match the specified data are kept.
-  # Note that this logic means that if the lookup table has overlapping ranges 
-  # that both match the data, it will produce duplicate entries for the same individual.
-  
-  return(result)
-}
-
 #' Split a Lookup Table into Range-Based and Value-Based Components
 #'
 #' This function reads a lookup table from a CSV file and splits it into two components: one for
@@ -191,66 +54,140 @@ split_lookup_table <- function(
   return(lookup_processed)
 }
 
-#' Append a Bucketed Column to a Database Table Based on a Lookup Table
+#' Translate a single line of bucketing logic from a value lookup table into SQL code
 #'
-#' This function adds a new bucketed column to a database table using a range-based or value-based lookup table.
-#' The lookup table is provided as a CSV file, and the function splits the lookup table into value and range components.
+#' This function translates one line of a value-based lookup table into a corresponding
+#' SQL `CASE WHEN` statement.
 #'
-#' @param con A database connection.
-#' @param filepath The path to the lookup table CSV file.
-#' @param data A lazy database reference to the input data.
-#' @param input_column The column to be bucketed/matched.
-#' @param id_column The unique ID column in the data.
-#'
-#' @return A lazy database reference with the appended bucketed column.
-#'
+#' @param i Integer. The row index of the lookup table.
+#' @param lookup_table A tibble or data frame with at least two columns: `bucket_name` 
+#' and `specific_value`, which define the bucketing logic.
+#' @param col A string. The name of the column in the database that the SQL logic applies to.
+#' 
+#' @return A string. A single line of SQL `CASE WHEN` code for a value-based condition.
 #' @export
-append_bucket_column <- function(
-    con,             # Database connection
-    filepath,        # Path to the lookup table CSV file
-    data,            # Lazy database reference (input data)
-    input_column,    # The column to be bucketed/matched
-    id_column        # The unique ID column
+write_sql_fragment_value <- function(i, lookup_table, col) {
+  
+  bucket_name <- lookup_table$bucket_name[i]
+  specific_value <- lookup_table$specific_value[i]
+  
+  # If-else logic used to wrap specific_value in single quotes if it's not a number
+  if (is.numeric(specific_value)) {
+    fragment <- glue::glue("WHEN {col} = {specific_value} THEN '{bucket_name}'")
+  } else {
+    fragment <- glue::glue("WHEN {col} = '{specific_value}' THEN '{bucket_name}'")
+  }
+  
+  return(fragment)
+}
+
+#' Translate a single line of bucketing logic from a range lookup table into SQL code
+#'
+#' This function translates one line of a range-based lookup table into a corresponding
+#' SQL `CASE WHEN` statement.
+#'
+#' @param i Integer. The row index of the lookup table.
+#' @param lookup_table A tibble or data frame with at least three columns: `bucket_name`, 
+#' `lower_bound`, and `upper_bound`, which define the range bucketing logic.
+#' @param col A string. The name of the column in the database that the SQL logic applies to.
+#' 
+#' @return A string. A single line of SQL `CASE WHEN` code for a range-based condition.
+#' @export
+write_sql_fragment_range <- function(i, lookup_table, col) {
+  
+  bucket_name <- lookup_table$bucket_name[i]
+  lower_bound <- lookup_table$lower_bound[i]
+  upper_bound <- lookup_table$upper_bound[i]
+  
+  fragment <- glue::glue(
+    "WHEN {col} >= {lower_bound} AND {col} < {upper_bound} THEN '{bucket_name}'"
+  )
+  
+  return(fragment)
+}
+
+#' Create SQL statements to add and populate a new column with bucketing logic
+#'
+#' This function generates SQL `ALTER TABLE` and `UPDATE` statements to add a new column
+#' and populate it based on value-based and range-based bucketing rules provided by
+#' `value_lookup_table` and `range_lookup_table`.
+#'
+#' @param range_lookup_table A tibble or data frame with at least three columns: 
+#' `bucket_name`, `lower_bound`, and `upper_bound` to define the range bucketing logic.
+#' @param value_lookup_table A tibble or data frame with at least two columns: 
+#' `bucket_name` and `specific_value` to define the value-based bucketing logic.
+#' @param col A string. The name of the column in the database that the SQL logic applies to.
+#' @param table A string. The name of the SQL table where the new column will be added.
+#' 
+#' @return A string containing the SQL statements to add and update the new column.
+#' @export
+write_sql_query <- function(
+    range_lookup_table,
+    value_lookup_table,
+    col,   # Must be a string
+    table  # Must be a string
 ) {
   
-  # Function adding a bucketed column to a database (referenced, optionally,
-  # through a lazy database reference) using value and range lookup rules specified
-  # in a lookup table CSV.
+  # Set the name for the new column based on the input col argument
+  new_col <- paste0(col, "_bucket")
   
-  # Step 1: Split the lookup table into range and value components
-  lookup_tb <- split_lookup_table(filepath)
+  # Verify that at least one of the lookup tables is nonempty before proceeding
+  if (nrow(value_lookup_table) == 0 & nrow(range_lookup_table) == 0) {
+    stop(paste(
+      "Cannot write SQL query. Both range_lookup_table and value_lookup_table",
+      "have no rows."
+    ))
+  }
   
-  # Step 2: Write the lookup tables to the database
-  dbWriteTable(con, paste0(input_column, "_lookup_range"), lookup_tb$range, overwrite = TRUE, temporary = TRUE)
-  dbWriteTable(con, paste0(input_column, "_lookup_value"), lookup_tb$value, overwrite = TRUE, temporary = TRUE)
+  # Generate the code block executing the value-based logic of the SQL query 
+  if (nrow(value_lookup_table) == 0) {
+    value_logic <- "-- None specified"
+  } else {
+    # Translate each line of the lookup table into SQL code expressing the 
+    # bucketing logic
+    value_logic <- lapply(
+      seq_len(value_lookup_table |> nrow()),
+      write_sql_fragment_value,
+      # Arguments for `write_sql_fragment_value()`
+      lookup_table = value_lookup_table,
+      col = col
+    ) |> 
+      unlist() |>
+      paste(collapse = "\n    ") # newline and spaces for formatting
+  }
   
-  # Step 3: Create lazy references to these tables
-  lookup_range_db <- tbl(con, paste0(input_column, "_lookup_range"))
-  lookup_value_db <- tbl(con, paste0(input_column, "_lookup_value"))
+  # Generate the code block executing the range-based logic of the SQL query
+  if (nrow(range_lookup_table) == 0) {
+    range_logic <- "-- None specified"
+  } else {
+    # Translate each line of the lookup table into SQL code expressing the 
+    # bucketing logic
+    range_logic <- lapply(
+      seq_len(range_lookup_table |> nrow()),
+      write_sql_fragment_range,
+      # Arguments for `write_sql_fragment_range()`
+      lookup_table = range_lookup_table,
+      col = col
+    ) |> 
+      unlist() |>
+      paste(collapse = "\n    ") # newline and spaces for formatting
+  }
   
-  # Step 4: Perform range and value lookups
-  data1_db <- range_match_lookup(
-    data = data,
-    lookup = lookup_range_db,
-    input_column = input_column
+  # Construct the final SQL query, inserting the generated logic into the CASE statement
+  query <- glue::glue(
+    "ALTER TABLE {table} ADD COLUMN {new_col} TEXT;
+    UPDATE {table} SET {new_col} = (
+      CASE
+        -- Value-based bucketing logic
+        {value_logic}
+        -- Range-based bucketing logic
+        {range_logic}
+        ELSE 'Unknown'
+      END
+    );"
   )
   
-  data2_db <- value_match_lookup(
-    data = data,
-    lookup = lookup_value_db,
-    input_column = input_column
-  )
-  
-  # Step 5: Join the results
-  result <- join_columns(
-    data1 = data1_db,
-    data2 = data2_db,
-    column = paste0(input_column, "_bucket"),
-    id = id_column
-  )
-  
-  # Return lazy database reference (result)
-  return(result)
+  return(query)
 }
 
 
@@ -296,3 +233,33 @@ race_eth_bucket <- function(data) {
   return(result)
 }
 
+
+#' Generate SQL Query for Joint Race/Ethnicity Bucket
+#'
+#' This function generates a SQL query to add a `RACE_ETH_bucket` column to the database table.
+#'
+#' @param table A string. The name of the SQL table where the new column will be added.
+#'
+#' @return A string. A SQL query with `CASE WHEN` statements to generate the `RACE_ETH_bucket`.
+#' @export
+write_race_eth_sql_query <- function(table) {
+  query <- glue::glue(
+    "ALTER TABLE {table}
+    ADD COLUMN RACE_ETH_bucket TEXT;
+    UPDATE {table}
+    SET RACE_ETH_bucket = (
+      CASE
+        WHEN HISPAN_bucket = 'hispanic' THEN 'Hispanic'
+        WHEN RACE_bucket = 'black' THEN 'Black'
+        WHEN RACE_bucket = 'aapi' THEN 'AAPI'
+        WHEN RACE_bucket = 'aian' THEN 'AIAN'
+        WHEN RACE_bucket = 'multi' THEN 'Multiracial'
+        WHEN RACE_bucket = 'white' THEN 'White'
+        WHEN RACE_bucket = 'other' THEN 'Other'
+        ELSE NULL
+      END
+    );"
+  )
+  
+  return(query)
+}
