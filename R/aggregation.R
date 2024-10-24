@@ -77,45 +77,48 @@ crosstab_mean <- function(
   result <- data |>
     group_by(!!!syms(group_by)) |>
     summarize(
-      # Calculate the weighted count of each row and the sum of all observations in that group
-      total_value_weighted = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
+      # Weighted sumproducts
+      weighted_sumprod = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
+      across(all_of(repwts), ~sum(!!sym(value) * .x, na.rm = TRUE), .names = "wsp_{.col}"),
+      # Weighted counts
+      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "wc_{.col}"),
       weighted_count = sum(!!sym(weight), na.rm = TRUE),
       count = n(),
-      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "weighted_count_{.col}"),
-      across(all_of(repwts), ~sum(!!sym(value) * .x, na.rm = TRUE), .names = "tvw_{.col}"),
       .groups = "drop"
     ) |>
     collect() # must collect in order for following operations to work
   
   result <- result |>
     mutate(
-      weighted_mean = total_value_weighted / weighted_count,
+      # Get the estimated weighted mean
+      weighted_mean = weighted_sumprod / weighted_count,
 
-      # Calculate weighted_mean_{.col} for each replicate weight
+      # Repeat this process for each repwt to get replicated estimated means
       across(
-        .cols = starts_with("tvw_"),
-        .fns = ~ .x / get(str_replace(cur_column(), "tvw_", "weighted_count_")),
+        .cols = starts_with("wsp_"),
+        .fns = ~ .x / get(str_replace(cur_column(), "wsp_", "wc_")),
         .names = "weighted_mean_{.col}"
       )
     ) |>
     select(
-      -total_value_weighted, 
-      -starts_with("weighted_count_"), 
-      -starts_with("tvw_")
-      ) 
-  
-  # Calculate standard errors using estimated weighted mean columns from replicate weights
+      # Remove unneeded intermediate calculations
+      -weighted_sumprod,
+      -starts_with("wc_"),
+      -starts_with("wsp_")
+      )
+
+  # Calculate standard errors using estimated weighted mean and replicated estimated means
   result <- result |>
     rowwise() |>
     mutate(
-      standard_error = sqrt((4 / 80) * sum((unlist(c_across(starts_with("weighted_mean_tvw_"))) - weighted_mean)^2, na.rm = TRUE))
+      mean_standard_error = sqrt((4 / 80) * sum((unlist(c_across(starts_with("weighted_mean_wsp_"))) - weighted_mean)^2, na.rm = TRUE))
     ) |>
     ungroup() |>
-    select(-starts_with("weighted_mean_tvw_")) # Remove unneeded intermediate calculations
+    # Remove unneeded intermediate calculations
+    select(-starts_with("weighted_mean_wsp_"))
   
   # Conditionally include all combinations of grouping variables
   if (every_combo) {
-    # Use complete to fill in missing combinations
     result <- result |>
       complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0))
   }
