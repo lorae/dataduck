@@ -69,11 +69,13 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6)) |>
+    mutate(weighted_mean = round(weighted_mean, 6),
+           mean_standard_error = round(mean_standard_error, 6)) |>
     arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
   expected_tb <- expected_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6)) |>
+    mutate(weighted_mean = round(weighted_mean, 6),
+           mean_standard_error = round(mean_standard_error, 6)) |>
     arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
@@ -100,11 +102,13 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6)) |>
+    mutate(weighted_mean = round(weighted_mean, 6),
+           mean_standard_error = round(mean_standard_error, 6)) |>
     arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
   expected_combo_tb <- expected_combo_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6)) |>
+    mutate(weighted_mean = round(weighted_mean, 6),
+           mean_standard_error = round(mean_standard_error, 6)) |>
     arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
@@ -127,11 +131,13 @@ test_that("crosstab_mean produces correct weighted mean results on tibble with e
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6)) |>
+    mutate(weighted_mean = round(weighted_mean, 6),
+           mean_standard_error = round(mean_standard_error, 6)) |>
     arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
   expected_tb <- expected_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6)) |>
+    mutate(weighted_mean = round(weighted_mean, 6),
+           mean_standard_error = round(mean_standard_error, 6)) |>
     arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
@@ -153,11 +159,13 @@ test_that("crosstab_mean produces correct weighted mean results on tibble with e
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6)) |>
+    mutate(weighted_mean = round(weighted_mean, 6),
+           mean_standard_error = round(mean_standard_error, 6)) |>
     arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
   expected_combo_tb <- expected_combo_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6)) |>
+    mutate(weighted_mean = round(weighted_mean, 6),
+           mean_standard_error = round(mean_standard_error, 6)) |>
     arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
