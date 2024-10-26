@@ -4,7 +4,13 @@
 \alias{crosstab_count}
 \title{Calculate Weighted and Unweighted Counts for Groups}
 \usage{
-crosstab_count(data, weight, group_by, every_combo = FALSE)
+crosstab_count(
+  data,
+  weight,
+  group_by,
+  every_combo = FALSE,
+  repwts = paste0("REPWTP", sprintf("\%d", 1:80))
+)
 }
 \arguments{
 \item{data}{A data frame or a database connection object containing the data to be aggregated.}
@@ -18,11 +24,12 @@ setting counts to zero for combinations not present in the data. Defaults to \co
 }
 \value{
 A tibble or database connection object containing the group-by columns, weighted count,
-and unweighted count for each group.
+unweighted count, and replicate weight standard errors for each group.
 }
 \description{
 This function calculates the weighted count (sum of weights) and the unweighted count
 of observations for the specified weight column, grouped by the specified columns.
 Optionally, it can include all combinations of the grouping variables, even if some combinations
 do not exist in the data, setting the counts to zero for those combinations.
+Info on replicate weight standard errors: https://usa.ipums.org/usa/repwt.shtml
 }

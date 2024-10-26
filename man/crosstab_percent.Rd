@@ -4,7 +4,14 @@
 \alias{crosstab_percent}
 \title{Calculate Percentages Within Groups}
 \usage{
-crosstab_percent(data, weight, group_by, percent_group_by)
+crosstab_percent(
+  data,
+  weight,
+  group_by,
+  percent_group_by,
+  every_combo = FALSE,
+  repwts = paste0("REPWTP", sprintf("\%d", 1:80))
+)
 }
 \arguments{
 \item{data}{A data frame or a database connection object containing the data to be aggregated.}

@@ -4,7 +4,14 @@
 \alias{crosstab_mean}
 \title{Calculate Weighted Mean for Groups}
 \usage{
-crosstab_mean(data, value, weight, group_by)
+crosstab_mean(
+  data,
+  value,
+  weight,
+  group_by,
+  every_combo = FALSE,
+  repwts = paste0("REPWTP", sprintf("\%d", 1:80))
+)
 }
 \arguments{
 \item{data}{A data frame or a database connection object containing the data to be aggregated.}
