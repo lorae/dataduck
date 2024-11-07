@@ -84,7 +84,18 @@ bootstrap_replicates(
   wt_col = "wt", 
   repwt_cols = repwt_vector, 
   hhsize = "hhsize"
-  )
+)
 
 # This is what the bootstrapped replicates ~should~ be. 
 map(repwt_vector, ~ hhsize_by_sex(input, wt = .x, hhsize = "hhsize"))
+
+calculate_standard_errors <- function(
+    bootstrap, # The output of a bootstrap_replicates() function
+    se_col # String name of column to produce standard error on
+    ) {
+  # Create a list of each of the bootstrapped data frames minus the main result
+  map(bootstrap$replicate_estimates, function(.x) {
+    .x |>
+      mutate(diff_sq = (.x[[se_col]] - bootstrap$main_estimate[[se_col]])^2)
+    })
+}
