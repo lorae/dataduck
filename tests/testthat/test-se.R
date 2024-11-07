@@ -38,6 +38,7 @@ count_by_sex <- function(
   result <- data |>
     group_by(sex) |>
     summarize(
+      count = n(),
       weighted_count = sum(.data[[wt]]),
       .groups = "drop"
     )
@@ -76,8 +77,7 @@ bootstrap_replicates <- function(
 # Initialize the names of the replicate weight columns
 repwt_vector <- paste0("repwt", 1:4)
 
-# This is the result of the function. The bootstrapped replicates are not what
-# I expected
+# Apply bootstrap replicates to the data using the two functions
 bootstrap_replicates(
   data = input, 
   f = hhsize_by_sex, 
@@ -86,16 +86,42 @@ bootstrap_replicates(
   hhsize = "hhsize"
 )
 
-# This is what the bootstrapped replicates ~should~ be. 
-map(repwt_vector, ~ hhsize_by_sex(input, wt = .x, hhsize = "hhsize"))
+bootstrap_replicates(
+  data = input, 
+  f = count_by_sex, 
+  wt_col = "wt", 
+  repwt_cols = repwt_vector
+)
 
+# Note: this function assumes that all input tibbles from bootstrap are ordered
+# identically. If they're not (which might happen after a duckdb operation) then
+# this will introduce problems.
 calculate_standard_errors <- function(
     bootstrap, # The output of a bootstrap_replicates() function
-    se_col # String name of column to produce standard error on
+    constant = 4/80, # See https://usa.ipums.org/usa/repwt.shtml for more info
+    se_cols # Vector of string column names to produce standard error on
     ) {
-  # Create a list of each of the bootstrapped data frames minus the main result
-  map(bootstrap$replicate_estimates, function(.x) {
+  # Create a list of data frames containing sq_diff columns for each se_col
+  sq_diffs <- map(bootstrap$replicate_estimates, function(.x) {
+    # Calculate squared differences for each se_col
     .x |>
-      mutate(diff_sq = (.x[[se_col]] - bootstrap$main_estimate[[se_col]])^2)
-    })
+      mutate(across(all_of(se_cols), 
+                    ~ (. - bootstrap$main_estimate[[cur_column()]])^2, 
+                    .names = "sq_diff_{.col}"))
+  })
+  
+  se <- sq_diffs |>
+    reduce(~ .x + .y) |>
+    mutate(across(starts_with("sq_diff_"), 
+                  ~ sqrt(. * constant), 
+                  .names = "se_{.col}")) |>
+    # Rename columns that start with "se_sq_diff_" to start with "se_"
+    rename_with(~ sub("^se_sq_diff_", "se_", .), starts_with("se_sq_diff_")) |>
+    # Keep only the standard error columns
+    select(starts_with("se_"))
+  
+  output <- bootstrap$main_estimate |>
+    bind_cols(se)
+
+  return(output)
 }
