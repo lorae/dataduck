@@ -13,12 +13,13 @@ input <- tibble(
   repwt4 = c(18, 17, 11, 25, 15)
 )
 
-# Two example functions that we'll want to get standard errors for. For these functions
-# to work in the se() function, they must have an explicit argument for weight
+# Two example functions that I want to bootstrap in `bootstrap_replicates()`.
+# Note that they must they must have an explicit argument for weight (`wt`) to work
+# within `bootstrap_replicates()`
 hhsize_by_sex <- function(
     data,
-    wt,
-    hhsize
+    wt, # string name of weight column in `data`
+    hhsize # string name of hhsize column in `data`
     ) {
   result <- data |>
     group_by(sex) |>
@@ -32,7 +33,7 @@ hhsize_by_sex <- function(
 
 count_by_sex <- function(
     data,
-    wt
+    wt # string name of weight column in `data`
 ) {
   result <- data |>
     group_by(sex) |>
@@ -49,52 +50,41 @@ hhsize_by_sex(input, wt = "wt", hhsize = "hhsize")
 count_by_sex(input, wt = "wt")
 
 
-
-
-
-calculate_standard_errors <- function(
+# Calculates results of a target function `f()` and also calculates results of the 
+# target function subbing each of the specified `repwt_col` arguments for the 
+# `wt` argument within `f()`
+bootstrap_replicates <- function(
     data, 
     f, # function producing new columns for standard errors. Must have an argument
     # that is called "wt"
-    wt_col = "wt", # The main weight
-    repwt_cols = paste0("repwt", 1:4), # The replication weight column names
-    result_cols, # The names of columns for which standard errors will be calculated
+    wt_col = "wt", # string name of weight column in `data`
+    repwt_cols = paste0("repwt", 1:4), # Vector of strings of replicate weight columns
+    # in `data`
     ... # Any additional arguments needed for function f
     ) {
-  
-  # Main estimate computed using primary weights
   main_estimate <- f(data, wt = wt_col, ...)
-  
-  # # Compute replicate estimates
-  replicate_estimates <- map(repwt_cols, ~ f(data, wt = .x, ...))
-  
-  # # Number of replicates
-  # R <- length(rep_weight_cols)
-  # 
-  # # Calculate deviations
-  # deviations <- replicate_estimates - main_estimate
-  # 
-  # # Variance calculation (modify formula based on replication method)
-  # variance <- sum(deviations^2) / (R * (R - 1))
-  # 
-  # # Standard error
-  # standard_error <- sqrt(variance)
+  replicate_estimates <- map(repwt_cols, function(.x) f(data, wt = .x, ...))
   
   # Return results
   list(
     main_estimate = main_estimate,
-    replicate_estimates = replicate_estimates#,
-    #standard_error = standard_error,
+    replicate_estimates = replicate_estimates
   )
 }
 
 
-calculate_standard_errors(
+# Initialize the names of the replicate weight columns
+repwt_vector <- paste0("repwt", 1:4)
+
+# This is the result of the function. The bootstrapped replicates are not what
+# I expected
+bootstrap_replicates(
   data = input, 
   f = hhsize_by_sex, 
   wt_col = "wt", 
-  repwt_cols = paste0("repwt", 1:4), 
+  repwt_cols = repwt_vector, 
   hhsize = "hhsize"
   )
 
-
+# This is what the bootstrapped replicates ~should~ be. 
+map(repwt_vector, ~ hhsize_by_sex(input, wt = .x, hhsize = "hhsize"))
