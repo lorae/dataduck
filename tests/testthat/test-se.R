@@ -78,7 +78,7 @@ bootstrap_replicates <- function(
 repwt_vector <- paste0("repwt", 1:4)
 
 # Apply bootstrap replicates to the data using the two functions
-bootstrap_replicates(
+x <- bootstrap_replicates(
   data = input, 
   f = hhsize_by_sex, 
   wt_col = "wt", 
@@ -86,7 +86,7 @@ bootstrap_replicates(
   hhsize = "hhsize"
 )
 
-bootstrap_replicates(
+y <- bootstrap_replicates(
   data = input, 
   f = count_by_sex, 
   wt_col = "wt", 
@@ -125,3 +125,9 @@ calculate_standard_errors <- function(
 
   return(output)
 }
+
+calculate_standard_errors(x, se_cols = "weighted_mean")
+
+calculate_standard_errors(y, se_cols = c("weighted_count", "count"))
+calculate_standard_errors(y, se_cols = c("weighted_count"))
+calculate_standard_errors(y, se_cols = "weighted_count")
