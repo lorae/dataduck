@@ -8,7 +8,7 @@ bootstrap_replicates(
   data,
   f,
   wt_col = "wt",
-  repwt_cols = paste0("repwt", 1:80),
+  repwt_cols = paste0("repwt", 1:4),
   ...
 )
 }
