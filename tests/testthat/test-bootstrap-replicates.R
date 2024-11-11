@@ -90,7 +90,7 @@ test_that("bootstrap_replicates produces expected main and bootstrapped results 
     data = input,
     f = count_by_sex,
     wt_col = "wt",
-    repwt_cols = paste0("repwt", 1:4),
+    repwt_cols = paste0("repwt", 1:4)
   )
   
   # Compare results for count_by_sex

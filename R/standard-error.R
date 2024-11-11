@@ -25,12 +25,22 @@ bootstrap_replicates <- function(
     f, # function producing new columns for standard errors. Must have an argument
     # that is called "wt"
     wt_col = "wt", # string name of weight column in `data`
-    repwt_cols = paste0("repwt", 1:80), # Vector of strings of replicate weight columns
+    repwt_cols = paste0("repwt", 1:4), # Vector of strings of replicate weight columns
     # in `data`
     ... # Any additional arguments needed for function f
 ) {
-  main_estimate <- f(data, wt = wt_col, ...)
-  replicate_estimates <- map(repwt_cols, function(.x) f(data, wt = .x, ...))
+  
+  extra_args <- list(...)
+  is.extra_args <- (length(extra_args) > 0)
+  
+  # Check if additional arguments are passed
+  if (is.extra_args) {
+    main_estimate <- f(data, wt = wt_col, ...)
+    replicate_estimates <- map(repwt_cols, function(.x) f(data, wt = .x, ...))
+  } else {
+    main_estimate <- f(data, wt = wt_col)
+    replicate_estimates <- map(repwt_cols, function(.x) f(data, wt = .x))
+  }
   
   # Return results
   list(
@@ -39,6 +49,7 @@ bootstrap_replicates <- function(
   )
 }
 
+  
 #' Calculate Standard Errors Using Bootstrapped Replicate Results
 #'
 #' Computes standard errors across specified columns using the output of 
