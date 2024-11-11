@@ -98,3 +98,55 @@ se_from_bootstrap <- function(
   
   return(output)
 }
+
+
+#' Estimate with Bootstrap Standard Errors
+#'
+#' Combines bootstrap replicate estimation and standard error calculation into a single function.
+#' It calculates results of a target function `f()` using a specified weight column,
+#' computes replicate estimates by substituting each of the specified `repwt_cols` 
+#' for the `wt` argument within `f()`, and then calculates standard errors across 
+#' specified columns using the output of `bootstrap_replicates()`.
+#'
+#' @param data A tibble or data frame containing the data to be analyzed.
+#' @param f A function that produces new columns or summary statistics. 
+#'   The function `f` must have an argument named `wt` to specify the weight column.
+#' @param wt_col A string indicating the column name to be used as the main weight.
+#'   Defaults to `"wt"`.
+#' @param repwt_cols A vector of strings indicating the names of replicate weight 
+#'   columns in `data`. Defaults to `paste0("repwt", 1:4)`.
+#' @param constant A constant used in the standard error calculation. For IPUMS data, 
+#'   this is typically `4/80`. See \url{https://usa.ipums.org/usa/repwt.shtml} for details.
+#' @param se_cols A vector of string column names for which standard errors are to be computed.
+#' @param ... Additional arguments passed to the function `f`.
+#'
+#' @return A tibble containing the original main estimate columns along with new 
+#'   columns for the calculated standard errors. The standard error columns will 
+#'   have the prefix `"se_"`.
+estimate_with_bootstrap_se <- function(
+    data, 
+    f,  # Function producing new columns for standard errors. Must have an argument named "wt"
+    wt_col = "wt",  # String name of weight column in `data`
+    repwt_cols = paste0("repwt", 1:4),  # Vector of strings of replicate weight columns in `data`
+    constant = 4/80,  # See https://usa.ipums.org/usa/repwt.shtml for more info
+    se_cols,  # Vector of string column names to produce standard errors on
+    ...  # Any additional arguments needed for function f
+) {
+  # Run bootstrap_replicates
+  bootstrap <- bootstrap_replicates(
+    data = data,
+    f = f,
+    wt_col = wt_col,
+    repwt_cols = repwt_cols,
+    ...
+  )
+  
+  # Run se_from_bootstrap
+  result <- se_from_bootstrap(
+    bootstrap = bootstrap,
+    constant = constant,
+    se_cols = se_cols
+  )
+  
+  return(result)
+}
