@@ -66,7 +66,7 @@ bootstrap_replicates <- function(
 #' @return A tibble containing the original main estimate columns along with new 
 #'   columns for the calculated standard errors. The standard error columns will 
 #'   have the prefix `"se_"`.
-calculate_standard_errors <- function(
+se_from_bootstrap <- function(
     bootstrap, # The output of a bootstrap_replicates() function
     constant = 4/80, # See https://usa.ipums.org/usa/repwt.shtml for more info
     se_cols # Vector of string column names to produce standard error on
