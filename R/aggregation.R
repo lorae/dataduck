@@ -66,7 +66,6 @@ crosstab_count_no_se <- function(
     summarize(
       weighted_count = sum(!!sym(weight), na.rm = TRUE),
       count = n(),
-      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "est_{.col}"),
       .groups = "drop"
     )
   
