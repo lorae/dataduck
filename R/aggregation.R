@@ -53,6 +53,32 @@ crosstab_count <- function(
   return(result)
 }
 
+crosstab_count_no_se <- function(
+    data,
+    weight,
+    group_by,
+    every_combo = FALSE
+) {
+  
+  # Calculate base results using full-sample weight and unweighted count
+  result <- data |>
+    group_by(across(all_of(group_by))) |>
+    summarize(
+      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      count = n(),
+      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "est_{.col}"),
+      .groups = "drop"
+    )
+  
+  # Conditionally include all combinations of grouping variables
+  if (every_combo) {
+    result <- result |>
+      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0, standard_error = NA))
+  }
+  
+  return(result)
+}
+
 
 #' Calculate Weighted Mean for Groups
 #'
@@ -126,6 +152,37 @@ crosstab_mean <- function(
   return(result)
 }
 
+crosstab_mean_no_se <- function(
+    data, 
+    value, 
+    weight, 
+    group_by,
+    every_combo = FALSE
+) {
+  result <- data |>
+    group_by(!!!syms(group_by)) |>
+    summarize(
+      # Weighted sumproducts
+      weighted_sumprod = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
+      # Weighted counts
+      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      count = n(),
+      .groups = "drop"
+    ) |>
+    collect() # must collect in order for following operations to work
+  
+  result <- result |>
+    mutate(weighted_mean = weighted_sumprod / weighted_count) |>
+    select(-weighted_sumprod)
+  
+  # Conditionally include all combinations of grouping variables
+  if (every_combo) {
+    result <- result |>
+      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0))
+  }
+  
+  return(result)
+}
 
 #' Calculate Percentages Within Groups
 #'
@@ -206,7 +263,46 @@ crosstab_percent <- function(
 }
 
 
-
+crosstab_percent_no_se <- function(
+    data, 
+    weight, 
+    group_by, 
+    percent_group_by,
+    every_combo = FALSE
+) {
+  if (!all(percent_group_by %in% group_by)) {
+    stop("All elements of 'percent_group_by' must be included in 'group_by'.")
+  }
+  
+  result <- data |>
+    group_by(!!!syms(group_by)) |>
+    summarize(
+      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      count = n(),
+      .groups = "drop"
+    )
+  
+  # Conditionally include all combinations of grouping variables
+  if (every_combo) {
+    # Use complete to fill in missing combinations
+    result <- result |>
+      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0))
+  }  
+  
+  result <- result |>
+    collect()
+  
+  # Now add the percent column
+  result <- result |> 
+    group_by(!!!syms(percent_group_by)) |>
+    mutate(
+      # Main percentage
+      percent = 100 * (weighted_count / sum(weighted_count, na.rm = TRUE)),
+    ) |>
+    ungroup()
+  
+  return(result)
+}
 
 
 
