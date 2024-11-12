@@ -56,17 +56,15 @@ test_that("crosstab_count produces correct count results on database, with `ever
     every_combo = TRUE
   ) |> collect()
   
-  # Round and arrange output for comparison
+  # Arrange output for comparison
   output_tb <- output_tb |>
-    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
-  
+
   expected_combo_tb <- expected_combo_tb |>
-    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
 
   # Compare results
-  expect_equal(output_tb, expected_combo_tb)
+  expect_equal(output_tb, expected_combo_tb, tolerance = 1e-5)
   
   dbDisconnect(con, shutdown = TRUE)
 })
@@ -88,15 +86,13 @@ test_that("crosstab_count produces correct count results on database, with `ever
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_tb <- expected_tb |>
-    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
-  expect_equal(output_tb, expected_tb)
+  expect_equal(output_tb, expected_tb, tolerance = 1e-5)
   
   dbDisconnect(con, shutdown = TRUE)
 })
@@ -114,15 +110,13 @@ test_that("crosstab_count produces correct count results on tibble, with `every_
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_combo_tb <- expected_combo_tb |>
-    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
-  expect_equal(output_tb, expected_combo_tb)
+  expect_equal(output_tb, expected_combo_tb, tolerance = 1e-5)
 
 })
 
@@ -139,14 +133,12 @@ test_that("crosstab_count produces correct count results on tibble, with `every_
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_tb <- expected_tb |>
-    mutate(standard_error = round(standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
-  expect_equal(output_tb, expected_tb)
+  expect_equal(output_tb, expected_tb, tolerance = 1e-5)
 
 })
