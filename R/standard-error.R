@@ -77,7 +77,9 @@ se_from_bootstrap <- function(
     .x |>
       mutate(across(all_of(se_cols), 
                     ~ (. - bootstrap$main_estimate[[cur_column()]])^2, 
-                    .names = "sq_diff_{.col}"))
+                    .names = "sq_diff_{.col}")) |>
+      # Keep only the squared differences
+      select(starts_with("sq_diff_"))
   })
   
   # Sum the squared differences to calculate the standard errors
