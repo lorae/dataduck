@@ -53,6 +53,23 @@ crosstab_count <- function(
   return(result)
 }
 
+#' Calculate Weighted and Unweighted Counts for Groups (No Standard Error)
+#'
+#' This function calculates the weighted count (sum of weights) and the unweighted count
+#' of observations for the specified weight column, grouped by the specified columns.
+#' Optionally, it can include all combinations of the grouping variables, even if some combinations
+#' do not exist in the data, setting the counts to zero for those combinations.
+#'
+#' @param data A data frame or a database connection object containing the data to be aggregated.
+#' @param wt A string specifying the name of the column containing the weights.
+#' @param group_by A character vector of column names to group by.
+#' @param every_combo Logical, whether to include all combinations of the grouping variables,
+#'   setting counts to zero for combinations not present in the data. Defaults to `FALSE`.
+#'
+#' @return A tibble or database connection object containing the group-by columns, weighted count,
+#'   and unweighted count for each group.
+#'
+#' @export
 crosstab_count_no_se <- function(
     data,
     wt,
@@ -151,10 +168,26 @@ crosstab_mean <- function(
   return(result)
 }
 
+#' Calculate Weighted Mean for Groups (No Standard Error)
+#'
+#' This function calculates the weighted mean for the specified value and weight columns, grouped by the specified columns.
+#' Optionally, it can include all combinations of the grouping variables, even if some combinations
+#' do not exist in the data, setting the counts to zero for those combinations.
+#'
+#' @param data A data frame or a database connection object containing the data to be aggregated.
+#' @param value A string specifying the name of the column containing the values to be averaged.
+#' @param wt A string specifying the name of the column containing the weights.
+#' @param group_by A character vector of column names to group by.
+#' @param every_combo Logical, whether to include all combinations of the grouping variables,
+#'   setting counts to zero for combinations not present in the data. Defaults to `FALSE`.
+#'
+#' @return A tibble or database connection object containing the group-by columns and weighted mean for each group.
+#'
+#' @export
 crosstab_mean_no_se <- function(
     data, 
     value, 
-    weight, 
+    wt, 
     group_by,
     every_combo = FALSE
 ) {
@@ -162,9 +195,9 @@ crosstab_mean_no_se <- function(
     group_by(!!!syms(group_by)) |>
     summarize(
       # Weighted sumproducts
-      weighted_sumprod = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
+      weighted_sumprod = sum(!!sym(value) * !!sym(wt), na.rm = TRUE),
       # Weighted counts
-      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      weighted_count = sum(!!sym(wt), na.rm = TRUE),
       count = n(),
       .groups = "drop"
     ) |>
@@ -261,7 +294,23 @@ crosstab_percent <- function(
   return(result)
 }
 
-
+#' Calculate Percentages Within Groups (No Standard Error)
+#'
+#' This function calculates percentages of weighted counts within specified groups.
+#' Optionally, it can include all combinations of the grouping variables, even if some combinations
+#' do not exist in the data, setting the counts to zero for those combinations.
+#'
+#' @param data A data frame or a database connection object containing the data to be aggregated.
+#' @param weight A string specifying the name of the column containing the weights.
+#' @param group_by A character vector of column names to group by for the main counts.
+#' @param percent_group_by A character vector of column names to group by for the percentage calculation.
+#'   All elements of `percent_group_by` must be included in `group_by`.
+#' @param every_combo Logical, whether to include all combinations of the grouping variables,
+#'   setting counts to zero for combinations not present in the data. Defaults to `FALSE`.
+#'
+#' @return A tibble or database connection object containing the group-by columns and percentages for each group.
+#'
+#' @export
 crosstab_percent_no_se <- function(
     data, 
     weight, 
