@@ -22,25 +22,39 @@
 #' }
 bootstrap_replicates <- function(
     data, 
-    f, # function producing new columns for standard errors. Must have an argument
-    # that is called "wt"
+    f, # function producing new columns for standard errors. Must have an argument that is called "wt"
     wt_col = "wt", # string name of weight column in `data`
-    repwt_cols = paste0("repwt", 1:4), # Vector of strings of replicate weight columns
-    # in `data`
+    repwt_cols = paste0("repwt", 1:4), # Vector of strings of replicate weight columns in `data`
+    id_cols, # columns that collectively uniquely identify the output observations
     ... # Any additional arguments needed for function f
 ) {
   
   extra_args <- list(...)
   is.extra_args <- (length(extra_args) > 0)
   
-  # Check if additional arguments are passed
-  if (is.extra_args) {
-    main_estimate <- f(data, wt = wt_col, ...)
-    replicate_estimates <- map(repwt_cols, function(.x) f(data, wt = .x, ...))
+  # Collect the result of the main estimate and sort by id_cols
+  main_estimate <- if (is.extra_args) {
+    f(data, wt = wt_col, ...) |> 
+      collect() |> 
+      arrange(across(all_of(id_cols)))
   } else {
-    main_estimate <- f(data, wt = wt_col)
-    replicate_estimates <- map(repwt_cols, function(.x) f(data, wt = .x))
+    f(data, wt = wt_col) |> 
+      collect() |> 
+      arrange(across(all_of(id_cols)))
   }
+  
+  # Apply function to replicate weights, collect, and sort by id_cols
+  replicate_estimates <- map(repwt_cols, function(.x) {
+    if (is.extra_args) {
+      f(data, wt = .x, ...) |> 
+        collect() |> 
+        arrange(across(all_of(id_cols)))
+    } else {
+      f(data, wt = .x) |> 
+        collect() |> 
+        arrange(across(all_of(id_cols)))
+    }
+  })
   
   # Return results
   list(
@@ -48,6 +62,7 @@ bootstrap_replicates <- function(
     replicate_estimates = replicate_estimates
   )
 }
+
 
   
 #' Calculate Standard Errors Using Bootstrapped Replicate Results
