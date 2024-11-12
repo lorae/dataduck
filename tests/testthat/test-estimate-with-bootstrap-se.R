@@ -114,6 +114,27 @@ test_that("estimate_with_bootstrap_se produces correct results for count_by_sex"
       se_weighted_count = round(se_weighted_count, 5),
       se_count = round(se_count, 5)
     )
-
+  
   expect_equal(output_count, expected_count)
+})
+
+test_that("estimate_with_bootstrap_se produces correct results for crosstab_count_no_se", {
+  output_count <- estimate_with_bootstrap_se(
+    data = input_data,
+    f = crosstab_count_no_se,
+    wt_col = "wt",
+    repwt_cols = paste0("repwt", 1:4),
+    constant = 1,   # Using constant = 1 for simplicity
+    se_cols = c("weighted_count", "count"),
+    group_by = c("sex")
+  )
+  
+  # Sort the column order
+  output_count <- output_count |>
+    select(sex, count, weighted_count, se_count, se_weighted_count)
+  
+  expected_count <- expected_count |>
+    select(sex, count, weighted_count, se_count, se_weighted_count)
+  
+  expect_equal(output_count, expected_count, tolerance = 1e-5)
 })
