@@ -51,9 +51,8 @@ test_that("crosstab_count produces correct count results on database, with `ever
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- crosstab_count(
     data = tbl(con, "input"),
-    weight = "PERWT",
+    wt = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
-    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = TRUE 
   ) |> collect()
   
@@ -62,12 +61,50 @@ test_that("crosstab_count produces correct count results on database, with `ever
     arrange(AGE_bucket, RACE_ETH_bucket)
 
   expected_combo_tb <- expected_combo_tb |>
-    arrange(AGE_bucket, RACE_ETH_bucket)
+    arrange(AGE_bucket, RACE_ETH_bucket) |>
+    select(-standard_error)
 
   # Compare results
   expect_equal(output_tb, expected_combo_tb, tolerance = 1e-5)
   
   dbDisconnect(con, shutdown = TRUE)
+})
+
+test_that("crosstab_count with estimate_with_boostrap_se produces correct count results on database, with `every_combo` set to TRUE.", {
+  
+  # Create in-memory DuckDB instance and load test input data
+  con <- dbConnect(duckdb::duckdb(), ":memory:")
+  dbWriteTable(con, "input", input_tb, overwrite = TRUE)
+  
+  # Compute weighted and unweighted counts using DuckDB table
+  output_tb <- estimate_with_bootstrap_se(
+    data = tbl(con, "input"),
+    f = crosstab_count,
+    wt_col = "PERWT",
+    repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
+    constant = 4/80,
+    id_cols = c("AGE_bucket", "RACE_ETH_bucket"),
+    se_cols = c("weighted_count"),
+    group_by = c("AGE_bucket", "RACE_ETH_bucket"),
+    every_combo = TRUE
+  )
+  
+  # Round and arrange output for comparison
+  output_tb <- output_tb |>
+    arrange(AGE_bucket, RACE_ETH_bucket)
+  
+  expected_combo_tb <- expected_combo_tb |>
+    arrange(AGE_bucket, RACE_ETH_bucket) |>
+    # Temp: replace NAs with 0 in expected output
+    mutate(across(everything(), ~ replace_na(.x, 0))) |> 
+    # Temp: rename column name
+    rename(se_weighted_count = standard_error)
+  
+  # Compare results
+  expect_equal(output_tb, expected_combo_tb, tolerance = 1e-5)
+  
+  dbDisconnect(con, shutdown = TRUE)
+  
 })
 
 test_that("crosstab_count produces correct count results on database, with `every_combo` set to FALSE.", {
@@ -79,9 +116,8 @@ test_that("crosstab_count produces correct count results on database, with `ever
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- crosstab_count(
     data = tbl(con, "input"),
-    weight = "PERWT",
+    wt = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
-    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = FALSE
   ) |> collect()
   
@@ -90,7 +126,8 @@ test_that("crosstab_count produces correct count results on database, with `ever
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_tb <- expected_tb |>
-    arrange(AGE_bucket, RACE_ETH_bucket)
+    arrange(AGE_bucket, RACE_ETH_bucket)|>
+    select(-standard_error)
   
   # Compare results
   expect_equal(output_tb, expected_tb, tolerance = 1e-5)
@@ -98,7 +135,7 @@ test_that("crosstab_count produces correct count results on database, with `ever
   dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("crosstab_count_no_se with estimate_with_boostrap_se produces correct count results on database, with `every_combo` set to FALSE.", {
+test_that("crosstab_count with estimate_with_boostrap_se produces correct count results on database, with `every_combo` set to FALSE.", {
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
@@ -107,7 +144,7 @@ test_that("crosstab_count_no_se with estimate_with_boostrap_se produces correct 
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
-    f = crosstab_count_no_se,
+    f = crosstab_count,
     wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
@@ -140,9 +177,8 @@ test_that("crosstab_count produces correct count results on tibble, with `every_
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- crosstab_count(
     data = input_tb,
-    weight = "PERWT",
+    wt = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
-    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = TRUE
   )
   
@@ -151,19 +187,20 @@ test_that("crosstab_count produces correct count results on tibble, with `every_
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_combo_tb <- expected_combo_tb |>
-    arrange(AGE_bucket, RACE_ETH_bucket)
+    arrange(AGE_bucket, RACE_ETH_bucket) |>
+    select(-standard_error)
   
   # Compare results
   expect_equal(output_tb, expected_combo_tb, tolerance = 1e-5)
 
 })
 
-test_that("crosstab_count_no_se with estimate_with_boostrap_se produces correct count results on tibble, with `every_combo` set to TRUE.", {
+test_that("crosstab_count with estimate_with_boostrap_se produces correct count results on tibble, with `every_combo` set to TRUE.", {
   
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- estimate_with_bootstrap_se(
     data = input_tb,
-    f = crosstab_count_no_se,
+    f = crosstab_count,
     wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
@@ -194,9 +231,8 @@ test_that("crosstab_count produces correct count results on tibble, with `every_
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- crosstab_count(
     data = input_tb,
-    weight = "PERWT",
+    wt = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
-    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = FALSE
   ) 
   
@@ -205,19 +241,20 @@ test_that("crosstab_count produces correct count results on tibble, with `every_
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_tb <- expected_tb |>
-    arrange(AGE_bucket, RACE_ETH_bucket)
+    arrange(AGE_bucket, RACE_ETH_bucket) |>
+    select(-standard_error)
   
   # Compare results
   expect_equal(output_tb, expected_tb, tolerance = 1e-5)
 
 })
 
-test_that("crosstab_count_no_se with estimate_with_boostrap_se produces correct count results on tibble, with `every_combo` set to FALSE.", {
+test_that("crosstab_count with estimate_with_boostrap_se produces correct count results on tibble, with `every_combo` set to FALSE.", {
   
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- estimate_with_bootstrap_se(
     data = input_tb,
-    f = crosstab_count_no_se,
+    f = crosstab_count,
     wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,

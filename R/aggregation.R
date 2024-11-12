@@ -18,60 +18,6 @@
 #' @export
 crosstab_count <- function(
     data,
-    weight,
-    group_by,
-    every_combo = FALSE,
-    repwts = paste0("REPWTP", sprintf("%d", 1:80))
-) {
-  
-  # Calculate base results using full-sample weight and unweighted count
-  result <- data |>
-    group_by(across(all_of(group_by))) |>
-    summarize(
-      weighted_count = sum(!!sym(weight), na.rm = TRUE),
-      count = n(),
-      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "est_{.col}"),
-      .groups = "drop"
-    )
-  
-  # Calculate standard errors using estimate columns from replicate weights
-  result <- result |>
-    collect() |> # must collect in order for following operations to work
-    rowwise() |>
-    mutate(
-      standard_error = sqrt((4 / 80) * sum((unlist(c_across(starts_with("est_"))) - weighted_count)^2, na.rm = TRUE))
-    ) |>
-    ungroup() |>
-    select(-starts_with("est_")) # Remove unneeded intermediate calculations
-  
-  # Conditionally include all combinations of grouping variables
-  if (every_combo) {
-    result <- result |>
-      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0, standard_error = NA))
-  }
-  
-  return(result)
-}
-
-#' Calculate Weighted and Unweighted Counts for Groups (No Standard Error)
-#'
-#' This function calculates the weighted count (sum of weights) and the unweighted count
-#' of observations for the specified weight column, grouped by the specified columns.
-#' Optionally, it can include all combinations of the grouping variables, even if some combinations
-#' do not exist in the data, setting the counts to zero for those combinations.
-#'
-#' @param data A data frame or a database connection object containing the data to be aggregated.
-#' @param wt A string specifying the name of the column containing the weights.
-#' @param group_by A character vector of column names to group by.
-#' @param every_combo Logical, whether to include all combinations of the grouping variables,
-#'   setting counts to zero for combinations not present in the data. Defaults to `FALSE`.
-#'
-#' @return A tibble or database connection object containing the group-by columns, weighted count,
-#'   and unweighted count for each group.
-#'
-#' @export
-crosstab_count_no_se <- function(
-    data,
     wt,
     group_by,
     every_combo = FALSE

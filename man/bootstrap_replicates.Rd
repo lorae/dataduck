@@ -9,6 +9,7 @@ bootstrap_replicates(
   f,
   wt_col = "wt",
   repwt_cols = paste0("repwt", 1:4),
+  id_cols,
   ...
 )
 }
