@@ -51,7 +51,7 @@ test_that("crosstab_count produces correct count results on database, with `ever
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- crosstab_count(
     data = tbl(con, "input"),
-    wt = "PERWT",
+    weight = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     every_combo = TRUE 
   ) |> collect()
@@ -116,7 +116,7 @@ test_that("crosstab_count produces correct count results on database, with `ever
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- crosstab_count(
     data = tbl(con, "input"),
-    wt = "PERWT",
+    weight = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     every_combo = FALSE
   ) |> collect()
@@ -177,7 +177,7 @@ test_that("crosstab_count produces correct count results on tibble, with `every_
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- crosstab_count(
     data = input_tb,
-    wt = "PERWT",
+    weight = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     every_combo = TRUE
   )
@@ -231,7 +231,7 @@ test_that("crosstab_count produces correct count results on tibble, with `every_
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- crosstab_count(
     data = input_tb,
-    wt = "PERWT",
+    weight = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     every_combo = FALSE
   ) 

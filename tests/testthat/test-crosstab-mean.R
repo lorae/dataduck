@@ -62,7 +62,7 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   output_tb <- crosstab_mean(
     data = tbl(con, "input"),
     value = "NUMPREC",
-    wt = "PERWT",
+    weight = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
     every_combo = FALSE
   ) |> collect()
@@ -127,7 +127,7 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   output_tb <- crosstab_mean(
     data = tbl(con, "input"),
     value = "NUMPREC",
-    wt = "PERWT",
+    weight = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
     every_combo = TRUE
   ) |> collect()
@@ -188,7 +188,7 @@ test_that("crosstab_mean produces correct weighted mean results on tibble with e
   output_tb <- crosstab_mean(
     data = input_tb,
     value = "NUMPREC",
-    wt = "PERWT",
+    weight = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
     every_combo = FALSE
   )
@@ -242,7 +242,7 @@ test_that("crosstab_mean produces correct weighted mean results on tibble with e
   output_tb <- crosstab_mean(
     data = input_tb,
     value = "NUMPREC",
-    wt = "PERWT",
+    weight = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
     every_combo = TRUE
   )

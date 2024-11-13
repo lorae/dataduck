@@ -15,7 +15,7 @@ input <- tibble(
   per_id = c(1, 2, 3, 4, 5),
   sex = c(1, 0, 1, 1, 0),
   hhsize = c(2, 3, 2, 1, 1),
-  wt = c(10, 12, 15, 30, 20),
+  weight = c(10, 12, 15, 30, 20),
   repwt1 = c(11, 13, 16, 28, 22),
   repwt2 = c(8, 8, 16, 25, 22),
   repwt3 = c(2, 4, 10, 14, 13),
@@ -25,13 +25,13 @@ input <- tibble(
 # Initialize two test functions to run using bootstrap_replicates
 hhsize_by_sex <- function(
     data,
-    wt, # string name of weight column in `data`
+    weight, # string name of weight column in `data`
     hhsize # string name of hhsize column in `data`
 ) {
   result <- data |>
     group_by(sex) |>
     summarize(
-      weighted_mean = sum(.data[[hhsize]] * .data[[wt]], na.rm = TRUE)/sum(.data[[wt]], na.rm = TRUE),
+      weighted_mean = sum(.data[[hhsize]] * .data[[weight]], na.rm = TRUE)/sum(.data[[weight]], na.rm = TRUE),
       .groups = "drop"
     )
   
@@ -40,13 +40,13 @@ hhsize_by_sex <- function(
 
 count_by_sex <- function(
     data,
-    wt # string name of weight column in `data`
+    weight # string name of weight column in `data`
 ) {
   result <- data |>
     group_by(sex) |>
     summarize(
       count = n(),
-      weighted_count = sum(.data[[wt]]),
+      weighted_count = sum(.data[[weight]]),
       .groups = "drop"
     )
   
@@ -57,7 +57,7 @@ test_that("bootstrap_replicates produces expected main and bootstrapped results 
   output_hhsize <- bootstrap_replicates(
     data = input,
     f = hhsize_by_sex,
-    wt_col = "wt",
+    wt_col = "weight",
     repwt_cols = paste0("repwt", 1:4),
     hhsize = "hhsize",
     id_cols = "sex"
@@ -66,23 +66,23 @@ test_that("bootstrap_replicates produces expected main and bootstrapped results 
   # Compare results
   expect_equal(
     output_hhsize$main_estimate, 
-    hhsize_by_sex(input, wt = "wt", hhsize = "hhsize")
+    hhsize_by_sex(input, weight = "weight", hhsize = "hhsize")
   )
   expect_equal(
     output_hhsize$replicate_estimates[[1]], 
-    hhsize_by_sex(input, wt = "repwt1", hhsize = "hhsize")
+    hhsize_by_sex(input, weight = "repwt1", hhsize = "hhsize")
   )
   expect_equal(
     output_hhsize$replicate_estimates[[2]], 
-    hhsize_by_sex(input, wt = "repwt2", hhsize = "hhsize")
+    hhsize_by_sex(input, weight = "repwt2", hhsize = "hhsize")
   )
   expect_equal(
     output_hhsize$replicate_estimates[[3]], 
-    hhsize_by_sex(input, wt = "repwt3", hhsize = "hhsize")
+    hhsize_by_sex(input, weight = "repwt3", hhsize = "hhsize")
   )
   expect_equal(
     output_hhsize$replicate_estimates[[4]], 
-    hhsize_by_sex(input, wt = "repwt4", hhsize = "hhsize")
+    hhsize_by_sex(input, weight = "repwt4", hhsize = "hhsize")
   )
 })
 
@@ -90,7 +90,7 @@ test_that("bootstrap_replicates produces expected main and bootstrapped results 
   output_count <- bootstrap_replicates(
     data = input,
     f = count_by_sex,
-    wt_col = "wt",
+    wt_col = "weight",
     repwt_cols = paste0("repwt", 1:4),
     id_cols = "sex"
   )
@@ -98,22 +98,22 @@ test_that("bootstrap_replicates produces expected main and bootstrapped results 
   # Compare results for count_by_sex
   expect_equal(
     output_count$main_estimate, 
-    count_by_sex(input, wt = "wt")
+    count_by_sex(input, weight = "weight")
   )
   expect_equal(
     output_count$replicate_estimates[[1]], 
-    count_by_sex(input, wt = "repwt1")
+    count_by_sex(input, weight = "repwt1")
   )
   expect_equal(
     output_count$replicate_estimates[[2]], 
-    count_by_sex(input, wt = "repwt2")
+    count_by_sex(input, weight = "repwt2")
   )
   expect_equal(
     output_count$replicate_estimates[[3]], 
-    count_by_sex(input, wt = "repwt3")
+    count_by_sex(input, weight = "repwt3")
   )
   expect_equal(
     output_count$replicate_estimates[[4]], 
-    count_by_sex(input, wt = "repwt4")
+    count_by_sex(input, weight = "repwt4")
   )
 })

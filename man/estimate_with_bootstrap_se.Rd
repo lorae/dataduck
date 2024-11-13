@@ -18,10 +18,10 @@ estimate_with_bootstrap_se(
 \item{data}{A tibble or data frame containing the data to be analyzed.}
 
 \item{f}{A function that produces new columns or summary statistics.
-The function \code{f} must have an argument named \code{wt} to specify the weight column.}
+The function \code{f} must have an argument named \code{weight} to specify the weight column.}
 
 \item{wt_col}{A string indicating the column name to be used as the main weight.
-Defaults to \code{"wt"}.}
+Defaults to \code{"weight"}.}
 
 \item{repwt_cols}{A vector of strings indicating the names of replicate weight
 columns in \code{data}. Defaults to \code{paste0("repwt", 1:4)}.}
@@ -42,6 +42,6 @@ have the prefix \code{"se_"}.
 Combines bootstrap replicate estimation and standard error calculation into a single function.
 It calculates results of a target function \code{f()} using a specified weight column,
 computes replicate estimates by substituting each of the specified \code{repwt_cols}
-for the \code{wt} argument within \code{f()}, and then calculates standard errors across
+for the \code{weight} argument within \code{f()}, and then calculates standard errors across
 specified columns using the output of \code{bootstrap_replicates()}.
 }

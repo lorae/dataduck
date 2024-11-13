@@ -4,17 +4,17 @@
 \alias{crosstab_percent}
 \title{Calculate Percentages Within Groups}
 \usage{
-crosstab_percent(data, wt, group_by, percent_group_by, every_combo = FALSE)
+crosstab_percent(data, weight, group_by, percent_group_by, every_combo = FALSE)
 }
 \arguments{
 \item{data}{A data frame or a database connection object containing the data to be aggregated.}
+
+\item{weight}{A string specifying the name of the column containing the weights.}
 
 \item{group_by}{A character vector of column names to group by for the main counts.}
 
 \item{percent_group_by}{A character vector of column names to group by for the percentage calculation.
 All elements of \code{percent_group_by} must be included in \code{group_by}.}
-
-\item{weight}{A string specifying the name of the column containing the weights.}
 }
 \value{
 A tibble or database connection object containing the group-by columns and percentages for each group.
