@@ -3,7 +3,6 @@
 export(crosstab_count)
 export(crosstab_mean)
 export(crosstab_percent)
-export(crosstab_percent_no_se)
 export(difference_means)
 export(extract_factor_label)
 export(map_data)

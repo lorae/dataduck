@@ -101,88 +101,6 @@ crosstab_mean <- function(
 #' @export
 crosstab_percent <- function(
     data, 
-    weight, 
-    group_by, 
-    percent_group_by,
-    every_combo = FALSE,
-    repwts = paste0("REPWTP", sprintf("%d", 1:80))
-    ) {
-  if (!all(percent_group_by %in% group_by)) {
-    stop("All elements of 'percent_group_by' must be included in 'group_by'.")
-  }
-  
-  result <- data |>
-    group_by(!!!syms(group_by)) |>
-    summarize(
-      weighted_count = sum(!!sym(weight), na.rm = TRUE),
-      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "weighted_count_{.col}"),
-      count = n(),
-      .groups = "drop"
-    )
-  
-  # Conditionally include all combinations of grouping variables
-  if (every_combo) {
-    # Use complete to fill in missing combinations
-    result <- result |>
-      complete(!!!syms(group_by), fill = list(weighted_count = 0, count = 0))
-  }  
-  
-  result <- result |>
-    collect()
-  
-  # Now add the percent column
-  result <- result |> 
-    group_by(!!!syms(percent_group_by)) |>
-    mutate(
-      # Main percentage
-      percent = 100 * (weighted_count / sum(weighted_count, na.rm = TRUE)),
-      # Replicate percentages
-      across(starts_with("weighted_count_REPWTP"), 
-             ~ 100 * (.x / sum(.x, na.rm = TRUE)), 
-             .names = "percent_{.col}")
-    ) |>
-    ungroup()
-  
-  # Calculate standard error of the percentages
-  result <- result |>
-    rowwise() |>
-    mutate(
-      # Standard error calculation for the percentage
-      percent_standard_error = sqrt((4 / 80) * sum((c_across(starts_with("percent_weighted_count_REPWTP")) - percent)^2, na.rm = TRUE))
-    ) |>
-    ungroup() |>
-    # Remove the intermediate replicate percentage columns
-    select(-starts_with("percent_weighted_count_REPWTP"), -starts_with("weighted_count_REPWTP"))
-  
-  # Percentages of 0 and 100 are going to have (misleading) percent_standard_error 
-  # measurements of 0. Correct these observations to NA.
-  result <- result |>
-    mutate(
-      percent_standard_error = if_else(percent == 0 | percent == 100, NA_real_, percent_standard_error)
-    )
-
-  return(result)
-}
-
-#' Calculate Percentages Within Groups (No Standard Error)
-#'
-#' This function calculates percentages of weighted counts within specified groups.
-#' Optionally, it can include all combinations of the grouping variables, even if some combinations
-#' do not exist in the data, setting the counts to zero for those combinations.
-#'
-#' @param data A data frame or a database connection object containing the data to be aggregated.
-#' @param weight A string specifying the name of the column containing the weights.
-#' @param group_by A character vector of column names to group by for the main counts.
-#' @param percent_group_by A character vector of column names to group by for the percentage calculation.
-#'   All elements of `percent_group_by` must be included in `group_by`.
-#' @param every_combo Logical, whether to include all combinations of the grouping variables,
-#'   setting counts to zero for combinations not present in the data. Defaults to `FALSE`.
-#'
-#' @return A tibble or database connection object containing the group-by columns and percentages for each group.
-#'
-#' @export
-crosstab_percent_no_se <- function(
-    data, 
     wt, 
     group_by, 
     percent_group_by,
@@ -221,10 +139,6 @@ crosstab_percent_no_se <- function(
   
   return(result)
 }
-
-
-
-
 
 #' Calculate the Difference in Means Between Two Datasets
 #'

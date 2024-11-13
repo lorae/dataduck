@@ -60,10 +60,9 @@ test_that("crosstab_percent produces correct percent results on database with ev
   # Compute percentages using DuckDB table
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
-    weight = "PERWT",
+    wt = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
-    percent_group_by = c("AGE_bucket"),
-    repwts = paste0("REPWTP", sprintf("%d", 1:4))
+    percent_group_by = c("AGE_bucket")
   ) |> collect()
   
   # Round and arrange output for comparison
@@ -71,7 +70,8 @@ test_that("crosstab_percent produces correct percent results on database with ev
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_byage_tb <- expected_byage_tb |>
-    arrange(AGE_bucket, RACE_ETH_bucket)
+    arrange(AGE_bucket, RACE_ETH_bucket) |>
+    select(-percent_standard_error)
 
   # Compare results
   expect_equal(output_tb, expected_byage_tb, tolerance = 1e-5)
@@ -79,7 +79,7 @@ test_that("crosstab_percent produces correct percent results on database with ev
   dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("crosstab_percent_no_se with estimate_with_boostrap_se produces correct percent results on database with every_combo = FALSE, grouped by AGE_bucket", {
+test_that("crosstab_percent with estimate_with_boostrap_se produces correct percent results on database with every_combo = FALSE, grouped by AGE_bucket", {
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
@@ -88,7 +88,7 @@ test_that("crosstab_percent_no_se with estimate_with_boostrap_se produces correc
   # Compute percentages using DuckDB table
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
-    f = crosstab_percent_no_se,
+    f = crosstab_percent,
     wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
@@ -125,10 +125,9 @@ test_that("crosstab_percent produces correct percent results on database with ev
   # Compute percentages using DuckDB table
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
-    weight = "PERWT",
+    wt = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     percent_group_by = c("AGE_bucket"),
-    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = TRUE
   ) |> collect()
   
@@ -137,7 +136,9 @@ test_that("crosstab_percent produces correct percent results on database with ev
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_byage_combo_tb <- expected_byage_combo_tb |>
-    arrange(AGE_bucket, RACE_ETH_bucket)
+    arrange(AGE_bucket, RACE_ETH_bucket) |>
+    select(-percent_standard_error)
+  
 
   # Compare results
   expect_equal(output_tb, expected_byage_combo_tb, tolerance = 1e-5)
@@ -145,7 +146,7 @@ test_that("crosstab_percent produces correct percent results on database with ev
   dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("crosstab_percent_no_se with estimate_with_boostrap_se produces correct percent results on database with every_combo = TRUE, grouped by AGE_bucket", {
+test_that("crosstab_percent with estimate_with_boostrap_se produces correct percent results on database with every_combo = TRUE, grouped by AGE_bucket", {
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
@@ -154,7 +155,7 @@ test_that("crosstab_percent_no_se with estimate_with_boostrap_se produces correc
   # Compute percentages using DuckDB table
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
-    f = crosstab_percent_no_se,
+    f = crosstab_percent,
     wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
@@ -191,10 +192,9 @@ test_that("crosstab_percent produces correct percent results on database with ev
   # Compute percentages using DuckDB table
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
-    weight = "PERWT",
+    wt = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
-    percent_group_by = c("RACE_ETH_bucket"),
-    repwts = paste0("REPWTP", sprintf("%d", 1:4))
+    percent_group_by = c("RACE_ETH_bucket")
   ) |> collect()
   
   # Round and arrange output for comparison
@@ -202,7 +202,8 @@ test_that("crosstab_percent produces correct percent results on database with ev
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_byrace_tb <- expected_byrace_tb |>
-    arrange(AGE_bucket, RACE_ETH_bucket)
+    arrange(AGE_bucket, RACE_ETH_bucket) |>
+    select(-percent_standard_error)
   
   # Compare results
   expect_equal(output_tb, expected_byrace_tb, tolerance = 1e-5)
@@ -210,7 +211,7 @@ test_that("crosstab_percent produces correct percent results on database with ev
   dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("crosstab_percent_no_se with estimate_with_boostrap_se produces correct percent results on database with every_combo = FALSE, grouped by RACE_ETH_bucket", {
+test_that("crosstab_percent with estimate_with_boostrap_se produces correct percent results on database with every_combo = FALSE, grouped by RACE_ETH_bucket", {
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
@@ -219,7 +220,7 @@ test_that("crosstab_percent_no_se with estimate_with_boostrap_se produces correc
   # Compute percentages using DuckDB table
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
-    f = crosstab_percent_no_se,
+    f = crosstab_percent,
     wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
@@ -252,10 +253,9 @@ test_that("crosstab_percent produces correct percent results on tibble with ever
   # Compute percentages on tibble input
   output_tb <- crosstab_percent(
     data = input_tb,
-    weight = "PERWT",
+    wt = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
-    percent_group_by = c("RACE_ETH_bucket"),
-    repwts = paste0("REPWTP", sprintf("%d", 1:4))
+    percent_group_by = c("RACE_ETH_bucket")
   )
   
   # Round and arrange output for comparison
@@ -263,19 +263,20 @@ test_that("crosstab_percent produces correct percent results on tibble with ever
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_byrace_tb <- expected_byrace_tb |>
-    arrange(AGE_bucket, RACE_ETH_bucket)
+    arrange(AGE_bucket, RACE_ETH_bucket) |>
+    select(-percent_standard_error)
   
   # Compare results
   expect_equal(output_tb, expected_byrace_tb, tolerance = 1e-5)
 
 })
 
-test_that("crosstab_percent_no_se with estimate_with_boostrap_se produces correct percent results on tibble with every_combo = FALSE, grouped by RACE_ETH_bucket", {
+test_that("crosstab_percent with estimate_with_boostrap_se produces correct percent results on tibble with every_combo = FALSE, grouped by RACE_ETH_bucket", {
   
   # Compute percentages on tibble input
   output_tb <- estimate_with_bootstrap_se(
     data = input_tb,
-    f = crosstab_percent_no_se,
+    f = crosstab_percent,
     wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
