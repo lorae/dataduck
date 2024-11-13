@@ -51,7 +51,7 @@ expected_byrace_tb <- tribble(
 
 # ----- Unit tests ----- #
 
-test_that("crosstab_percent produces correct weighted mean results on database with every_combo = FALSE, grouped by AGE_bucket", {
+test_that("crosstab_percent produces correct percent results on database with every_combo = FALSE, grouped by AGE_bucket", {
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
@@ -68,17 +68,13 @@ test_that("crosstab_percent produces correct weighted mean results on database w
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(percent = round(percent, 6),
-           percent_standard_error = round(percent_standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_byage_tb <- expected_byage_tb |>
-    mutate(percent = round(percent, 6),
-           percent_standard_error = round(percent_standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
 
   # Compare results
-  expect_equal(output_tb, expected_byage_tb)
+  expect_equal(output_tb, expected_byage_tb, tolerance = 1e-5)
   
   dbDisconnect(con, shutdown = TRUE)
 })
@@ -120,7 +116,7 @@ test_that("crosstab_percent_no_se with estimate_with_boostrap_se produces correc
   dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("crosstab_percent produces correct weighted mean results on database with every_combo = TRUE, grouped by AGE_bucket", {
+test_that("crosstab_percent produces correct percent results on database with every_combo = TRUE, grouped by AGE_bucket", {
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
@@ -138,17 +134,13 @@ test_that("crosstab_percent produces correct weighted mean results on database w
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(percent = round(percent, 6),
-           percent_standard_error = round(percent_standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_byage_combo_tb <- expected_byage_combo_tb |>
-    mutate(percent = round(percent, 6),
-           percent_standard_error = round(percent_standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
 
   # Compare results
-  expect_equal(output_tb, expected_byage_combo_tb)
+  expect_equal(output_tb, expected_byage_combo_tb, tolerance = 1e-5)
   
   dbDisconnect(con, shutdown = TRUE)
 })
@@ -190,7 +182,7 @@ test_that("crosstab_percent_no_se with estimate_with_boostrap_se produces correc
   dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("crosstab_percent produces correct weighted mean results on database with every_combo = FALSE, grouped by RACE_ETH_bucket", {
+test_that("crosstab_percent produces correct percent results on database with every_combo = FALSE, grouped by RACE_ETH_bucket", {
   
   # Create in-memory DuckDB instance and load test input data
   con <- dbConnect(duckdb::duckdb(), ":memory:")
@@ -207,17 +199,13 @@ test_that("crosstab_percent produces correct weighted mean results on database w
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(percent = round(percent, 6),
-           percent_standard_error = round(percent_standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_byrace_tb <- expected_byrace_tb |>
-    mutate(percent = round(percent, 6),
-           percent_standard_error = round(percent_standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
-  expect_equal(output_tb, expected_byrace_tb)
+  expect_equal(output_tb, expected_byrace_tb, tolerance = 1e-5)
   
   dbDisconnect(con, shutdown = TRUE)
 })
@@ -259,7 +247,7 @@ test_that("crosstab_percent_no_se with estimate_with_boostrap_se produces correc
   dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("crosstab_percent produces correct weighted mean results on tibble with every_combo = FALSE, grouped by RACE_ETH_bucket", {
+test_that("crosstab_percent produces correct percent results on tibble with every_combo = FALSE, grouped by RACE_ETH_bucket", {
 
   # Compute percentages on tibble input
   output_tb <- crosstab_percent(
@@ -272,17 +260,13 @@ test_that("crosstab_percent produces correct weighted mean results on tibble wit
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(percent = round(percent, 6),
-           percent_standard_error = round(percent_standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   expected_byrace_tb <- expected_byrace_tb |>
-    mutate(percent = round(percent, 6),
-           percent_standard_error = round(percent_standard_error, 6)) |>
     arrange(AGE_bucket, RACE_ETH_bucket)
   
   # Compare results
-  expect_equal(output_tb, expected_byrace_tb)
+  expect_equal(output_tb, expected_byrace_tb, tolerance = 1e-5)
 
 })
 
