@@ -183,7 +183,7 @@ crosstab_percent <- function(
 #' @export
 crosstab_percent_no_se <- function(
     data, 
-    weight, 
+    wt, 
     group_by, 
     percent_group_by,
     every_combo = FALSE
@@ -195,7 +195,7 @@ crosstab_percent_no_se <- function(
   result <- data |>
     group_by(!!!syms(group_by)) |>
     summarize(
-      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      weighted_count = sum(!!sym(wt), na.rm = TRUE),
       count = n(),
       .groups = "drop"
     )

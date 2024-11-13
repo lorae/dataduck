@@ -6,7 +6,7 @@
 \usage{
 crosstab_percent_no_se(
   data,
-  weight,
+  wt,
   group_by,
   percent_group_by,
   every_combo = FALSE
@@ -15,8 +15,6 @@ crosstab_percent_no_se(
 \arguments{
 \item{data}{A data frame or a database connection object containing the data to be aggregated.}
 
-\item{weight}{A string specifying the name of the column containing the weights.}
-
 \item{group_by}{A character vector of column names to group by for the main counts.}
 
 \item{percent_group_by}{A character vector of column names to group by for the percentage calculation.
@@ -24,6 +22,8 @@ All elements of \code{percent_group_by} must be included in \code{group_by}.}
 
 \item{every_combo}{Logical, whether to include all combinations of the grouping variables,
 setting counts to zero for combinations not present in the data. Defaults to \code{FALSE}.}
+
+\item{weight}{A string specifying the name of the column containing the weights.}
 }
 \value{
 A tibble or database connection object containing the group-by columns and percentages for each group.
