@@ -4,23 +4,17 @@
 \alias{crosstab_count}
 \title{Calculate Weighted and Unweighted Counts for Groups}
 \usage{
-crosstab_count(
-  data,
-  weight,
-  group_by,
-  every_combo = FALSE,
-  repwts = paste0("REPWTP", sprintf("\%d", 1:80))
-)
+crosstab_count(data, wt, group_by, every_combo = FALSE)
 }
 \arguments{
 \item{data}{A data frame or a database connection object containing the data to be aggregated.}
-
-\item{weight}{A string specifying the name of the column containing the weights.}
 
 \item{group_by}{A character vector of column names to group by.}
 
 \item{every_combo}{Logical, whether to include all combinations of the grouping variables,
 setting counts to zero for combinations not present in the data. Defaults to \code{FALSE}.}
+
+\item{weight}{A string specifying the name of the column containing the weights.}
 }
 \value{
 A tibble or database connection object containing the group-by columns, weighted count,

@@ -18,31 +18,19 @@
 #' @export
 crosstab_count <- function(
     data,
-    weight,
+    wt,
     group_by,
-    every_combo = FALSE,
-    repwts = paste0("REPWTP", sprintf("%d", 1:80))
+    every_combo = FALSE
 ) {
   
   # Calculate base results using full-sample weight and unweighted count
   result <- data |>
     group_by(across(all_of(group_by))) |>
     summarize(
-      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      weighted_count = sum(!!sym(wt), na.rm = TRUE),
       count = n(),
-      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "est_{.col}"),
       .groups = "drop"
     )
-  
-  # Calculate standard errors using estimate columns from replicate weights
-  result <- result |>
-    collect() |> # must collect in order for following operations to work
-    rowwise() |>
-    mutate(
-      standard_error = sqrt((4 / 80) * sum((unlist(c_across(starts_with("est_"))) - weighted_count)^2, na.rm = TRUE))
-    ) |>
-    ungroup() |>
-    select(-starts_with("est_")) # Remove unneeded intermediate calculations
   
   # Conditionally include all combinations of grouping variables
   if (every_combo) {
@@ -69,53 +57,25 @@ crosstab_count <- function(
 crosstab_mean <- function(
     data, 
     value, 
-    weight, 
+    wt, 
     group_by,
-    every_combo = FALSE,
-    repwts = paste0("REPWTP", sprintf("%d", 1:80))
+    every_combo = FALSE
 ) {
   result <- data |>
     group_by(!!!syms(group_by)) |>
     summarize(
       # Weighted sumproducts
-      weighted_sumprod = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
-      across(all_of(repwts), ~sum(!!sym(value) * .x, na.rm = TRUE), .names = "wsp_{.col}"),
+      weighted_sumprod = sum(!!sym(value) * !!sym(wt), na.rm = TRUE),
       # Weighted counts
-      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "wc_{.col}"),
-      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      weighted_count = sum(!!sym(wt), na.rm = TRUE),
       count = n(),
       .groups = "drop"
     ) |>
     collect() # must collect in order for following operations to work
   
   result <- result |>
-    mutate(
-      # Get the estimated weighted mean
-      weighted_mean = weighted_sumprod / weighted_count,
-
-      # Repeat this process for each repwt to get replicated estimated means
-      across(
-        .cols = starts_with("wsp_"),
-        .fns = ~ .x / get(str_replace(cur_column(), "wsp_", "wc_")),
-        .names = "weighted_mean_{.col}"
-      )
-    ) |>
-    select(
-      # Remove unneeded intermediate calculations
-      -weighted_sumprod,
-      -starts_with("wc_"),
-      -starts_with("wsp_")
-      )
-
-  # Calculate standard errors using estimated weighted mean and replicated estimated means
-  result <- result |>
-    rowwise() |>
-    mutate(
-      mean_standard_error = sqrt((4 / 80) * sum((unlist(c_across(starts_with("weighted_mean_wsp_"))) - weighted_mean)^2, na.rm = TRUE))
-    ) |>
-    ungroup() |>
-    # Remove unneeded intermediate calculations
-    select(-starts_with("weighted_mean_wsp_"))
+    mutate(weighted_mean = weighted_sumprod / weighted_count) |>
+    select(-weighted_sumprod)
   
   # Conditionally include all combinations of grouping variables
   if (every_combo) {
@@ -125,7 +85,6 @@ crosstab_mean <- function(
   
   return(result)
 }
-
 
 #' Calculate Percentages Within Groups
 #'
@@ -142,12 +101,11 @@ crosstab_mean <- function(
 #' @export
 crosstab_percent <- function(
     data, 
-    weight, 
+    wt, 
     group_by, 
     percent_group_by,
-    every_combo = FALSE,
-    repwts = paste0("REPWTP", sprintf("%d", 1:80))
-    ) {
+    every_combo = FALSE
+) {
   if (!all(percent_group_by %in% group_by)) {
     stop("All elements of 'percent_group_by' must be included in 'group_by'.")
   }
@@ -155,8 +113,7 @@ crosstab_percent <- function(
   result <- data |>
     group_by(!!!syms(group_by)) |>
     summarize(
-      weighted_count = sum(!!sym(weight), na.rm = TRUE),
-      across(all_of(repwts), ~ sum(.x, na.rm = TRUE), .names = "weighted_count_{.col}"),
+      weighted_count = sum(!!sym(wt), na.rm = TRUE),
       count = n(),
       .groups = "drop"
     )
@@ -177,40 +134,11 @@ crosstab_percent <- function(
     mutate(
       # Main percentage
       percent = 100 * (weighted_count / sum(weighted_count, na.rm = TRUE)),
-      # Replicate percentages
-      across(starts_with("weighted_count_REPWTP"), 
-             ~ 100 * (.x / sum(.x, na.rm = TRUE)), 
-             .names = "percent_{.col}")
     ) |>
     ungroup()
   
-  # Calculate standard error of the percentages
-  result <- result |>
-    rowwise() |>
-    mutate(
-      # Standard error calculation for the percentage
-      percent_standard_error = sqrt((4 / 80) * sum((c_across(starts_with("percent_weighted_count_REPWTP")) - percent)^2, na.rm = TRUE))
-    ) |>
-    ungroup() |>
-    # Remove the intermediate replicate percentage columns
-    select(-starts_with("percent_weighted_count_REPWTP"), -starts_with("weighted_count_REPWTP"))
-  
-  # Percentages of 0 and 100 are going to have (misleading) percent_standard_error 
-  # measurements of 0. Correct these observations to NA.
-  result <- result |>
-    mutate(
-      percent_standard_error = if_else(percent == 0 | percent == 100, NA_real_, percent_standard_error)
-    )
-
   return(result)
 }
-
-
-
-
-
-
-
 
 #' Calculate the Difference in Means Between Two Datasets
 #'
