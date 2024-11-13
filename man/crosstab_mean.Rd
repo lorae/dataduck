@@ -4,16 +4,16 @@
 \alias{crosstab_mean}
 \title{Calculate Weighted Mean for Groups}
 \usage{
-crosstab_mean(data, value, wt, group_by, every_combo = FALSE)
+crosstab_mean(data, value, wt_col, group_by, every_combo = FALSE)
 }
 \arguments{
 \item{data}{A data frame or a database connection object containing the data to be aggregated.}
 
 \item{value}{A string specifying the name of the column containing the values to be averaged.}
 
-\item{group_by}{A character vector of column names to group by.}
+\item{wt_col}{A string specifying the name of the column containing the weights.}
 
-\item{weight}{A string specifying the name of the column containing the weights.}
+\item{group_by}{A character vector of column names to group by.}
 }
 \value{
 A tibble or database connection object containing the group-by columns and weighted mean for each group.

@@ -60,7 +60,7 @@ test_that("crosstab_percent produces correct percent results on database with ev
   # Compute percentages using DuckDB table
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
-    wt = "PERWT",
+    wt_col = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     percent_group_by = c("AGE_bucket")
   ) |> collect()
@@ -125,7 +125,7 @@ test_that("crosstab_percent produces correct percent results on database with ev
   # Compute percentages using DuckDB table
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
-    wt = "PERWT",
+    wt_col = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     percent_group_by = c("AGE_bucket"),
     every_combo = TRUE
@@ -192,7 +192,7 @@ test_that("crosstab_percent produces correct percent results on database with ev
   # Compute percentages using DuckDB table
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
-    wt = "PERWT",
+    wt_col = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     percent_group_by = c("RACE_ETH_bucket")
   ) |> collect()
@@ -253,7 +253,7 @@ test_that("crosstab_percent produces correct percent results on tibble with ever
   # Compute percentages on tibble input
   output_tb <- crosstab_percent(
     data = input_tb,
-    wt = "PERWT",
+    wt_col = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     percent_group_by = c("RACE_ETH_bucket")
   )

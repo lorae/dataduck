@@ -15,7 +15,7 @@ input_data <- tibble(
   per_id = c(1, 2, 3, 4, 5),
   sex = c(1, 0, 1, 1, 0),
   hhsize = c(2, 3, 2, 1, 1),
-  wt = c(10, 12, 15, 30, 20),
+  weight = c(10, 12, 15, 30, 20),
   repwt1 = c(11, 13, 16, 28, 22),
   repwt2 = c(8, 8, 16, 25, 22),
   repwt3 = c(2, 4, 10, 14, 13),
@@ -25,13 +25,13 @@ input_data <- tibble(
 # Define the functions
 hhsize_by_sex <- function(
     data,
-    wt,      # String name of weight column in `data`
+    wt_col,      # String name of weight column in `data`
     hhsize   # String name of hhsize column in `data`
 ) {
   result <- data |>
     group_by(sex) |>
     summarize(
-      weighted_mean = sum(.data[[hhsize]] * .data[[wt]], na.rm = TRUE) / sum(.data[[wt]], na.rm = TRUE),
+      weighted_mean = sum(.data[[hhsize]] * .data[[wt_col]], na.rm = TRUE) / sum(.data[[wt_col]], na.rm = TRUE),
       .groups = "drop"
     )
   return(result)
@@ -39,13 +39,13 @@ hhsize_by_sex <- function(
 
 count_by_sex <- function(
     data,
-    wt    # String name of weight column in `data`
+    wt_col    # String name of weight column in `data`
 ) {
   result <- data |>
     group_by(sex) |>
     summarize(
       count = n(),
-      weighted_count = sum(.data[[wt]], na.rm = TRUE),
+      weighted_count = sum(.data[[wt_col]], na.rm = TRUE),
       .groups = "drop"
     )
   return(result)
@@ -71,7 +71,7 @@ test_that("estimate_with_bootstrap_se produces correct results for hhsize_by_sex
   output_hhsize <- estimate_with_bootstrap_se(
     data = input_data,
     f = hhsize_by_sex,
-    wt_col = "wt",
+    wt_col = "weight",
     repwt_cols = paste0("repwt", 1:4),
     constant = 1,   # Using constant = 1 for simplicity
     se_cols = c("weighted_mean"),
@@ -86,7 +86,7 @@ test_that("estimate_with_bootstrap_se produces correct results for count_by_sex"
   output_count <- estimate_with_bootstrap_se(
     data = input_data,
     f = count_by_sex,
-    wt_col = "wt",
+    wt_col = "weight",
     repwt_cols = paste0("repwt", 1:4),
     constant = 1,   # Using constant = 1 for simplicity
     se_cols = c("weighted_count", "count"),
@@ -100,7 +100,7 @@ test_that("estimate_with_bootstrap_se produces correct results for crosstab_coun
   output_count <- estimate_with_bootstrap_se(
     data = input_data,
     f = crosstab_count,
-    wt_col = "wt",
+    wt_col = "weight",
     repwt_cols = paste0("repwt", 1:4),
     constant = 1,   # Using constant = 1 for simplicity
     se_cols = c("weighted_count", "count"),

@@ -2,14 +2,14 @@
 #'
 #' Calculates results of a target function `f()` using a specified weight column,
 #' and also calculates results by substituting each of the specified `repwt_cols` 
-#' for the `wt` argument within `f()`. This is useful for calculating replicate 
+#' for the `wt_col` argument within `f()`. This is useful for calculating replicate 
 #' estimates required for standard error computation using replicate weights.
 #'
 #' @param data A tibble or data frame containing the data to be analyzed.
 #' @param f A function that produces new columns or summary statistics. 
-#'   The function `f` must have an argument named `wt` to specify the weight column.
+#'   The function `f` must have an argument named `wt_col` to specify the weight column.
 #' @param wt_col A string indicating the column name to be used as the main weight.
-#'   Defaults to `"wt"`.
+#'   Defaults to `"weight"`.
 #' @param repwt_cols A vector of strings indicating the names of replicate weight 
 #'   columns in `data`. Defaults to `paste0("repwt", 1:80)`.
 #' @param ... Additional arguments passed to the function `f`.
@@ -22,8 +22,8 @@
 #' }
 bootstrap_replicates <- function(
     data, 
-    f, # function producing new columns for standard errors. Must have an argument that is called "wt"
-    wt_col = "wt", # string name of weight column in `data`
+    f, # function producing new columns for standard errors. Must have an argument that is called "wt_col"
+    wt_col = "weight", # string name of weight column in `data`
     repwt_cols = paste0("repwt", 1:4), # Vector of strings of replicate weight columns in `data`
     id_cols, # columns that collectively uniquely identify the output observations
     ... # Any additional arguments needed for function f
@@ -34,11 +34,11 @@ bootstrap_replicates <- function(
   
   # Collect the result of the main estimate and sort by id_cols
   main_estimate <- if (is.extra_args) {
-    f(data, wt = wt_col, ...) |> 
+    f(data, wt_col = wt_col, ...) |> 
       collect() |> 
       arrange(across(all_of(id_cols)))
   } else {
-    f(data, wt = wt_col) |> 
+    f(data, wt_col = wt_col) |> 
       collect() |> 
       arrange(across(all_of(id_cols)))
   }
@@ -46,11 +46,11 @@ bootstrap_replicates <- function(
   # Apply function to replicate weights, collect, and sort by id_cols
   replicate_estimates <- map(repwt_cols, function(.x) {
     if (is.extra_args) {
-      f(data, wt = .x, ...) |> 
+      f(data, wt_col = .x, ...) |> 
         collect() |> 
         arrange(across(all_of(id_cols)))
     } else {
-      f(data, wt = .x) |> 
+      f(data, wt_col = .x) |> 
         collect() |> 
         arrange(across(all_of(id_cols)))
     }
@@ -122,14 +122,14 @@ se_from_bootstrap <- function(
 #' Combines bootstrap replicate estimation and standard error calculation into a single function.
 #' It calculates results of a target function `f()` using a specified weight column,
 #' computes replicate estimates by substituting each of the specified `repwt_cols` 
-#' for the `wt` argument within `f()`, and then calculates standard errors across 
+#' for the `wt_col` argument within `f()`, and then calculates standard errors across 
 #' specified columns using the output of `bootstrap_replicates()`.
 #'
 #' @param data A tibble or data frame containing the data to be analyzed.
 #' @param f A function that produces new columns or summary statistics. 
-#'   The function `f` must have an argument named `wt` to specify the weight column.
+#'   The function `f` must have an argument named `wt_col` to specify the weight column.
 #' @param wt_col A string indicating the column name to be used as the main weight.
-#'   Defaults to `"wt"`.
+#'   Defaults to `"weight"`.
 #' @param repwt_cols A vector of strings indicating the names of replicate weight 
 #'   columns in `data`. Defaults to `paste0("repwt", 1:4)`.
 #' @param constant A constant used in the standard error calculation. For IPUMS data, 
@@ -142,8 +142,8 @@ se_from_bootstrap <- function(
 #'   have the prefix `"se_"`.
 estimate_with_bootstrap_se <- function(
     data, 
-    f,  # Function producing new columns for standard errors. Must have an argument named "wt"
-    wt_col = "wt",  # String name of weight column in `data`
+    f,  # Function producing new columns for standard errors. Must have an argument named "wt_col"
+    wt_col = "weight",  # String name of weight column in `data`
     repwt_cols = paste0("repwt", 1:4),  # Vector of strings of replicate weight columns in `data`
     constant = 4/80,  # See https://usa.ipums.org/usa/repwt.shtml for more info
     se_cols,  # Vector of string column names to produce standard errors on
