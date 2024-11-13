@@ -25,13 +25,13 @@ input_data <- tibble(
 # Initialize two test functions
 hhsize_by_sex <- function(
     data,
-    weight, # string name of weight column in `data`
-    hhsize # string name of hhsize column in `data`
+    wt_col, # string name of weight column in `data`
+    hhsize_col # string name of hhsize column in `data`
 ) {
   result <- data |>
     group_by(sex) |>
     summarize(
-      weighted_mean = sum(.data[[hhsize]] * .data[[weight]], na.rm = TRUE)/sum(.data[[weight]], na.rm = TRUE),
+      weighted_mean = sum(.data[[hhsize_col]] * .data[[wt_col]], na.rm = TRUE)/sum(.data[[wt_col]], na.rm = TRUE),
       .groups = "drop"
     )
   
@@ -40,13 +40,13 @@ hhsize_by_sex <- function(
 
 count_by_sex <- function(
     data,
-    weight # string name of weight column in `data`
+    wt_col # string name of weight column in `data`
 ) {
   result <- data |>
     group_by(sex) |>
     summarize(
       count = n(),
-      weighted_count = sum(.data[[weight]]),
+      weighted_count = sum(.data[[wt_col]]),
       .groups = "drop"
     )
   
@@ -57,7 +57,7 @@ count_by_sex <- function(
 input_bootstrap_count <- bootstrap_replicates(
   data = input_data,
   f = count_by_sex,
-  weight = "weight",
+  wt_col = "weight",
   repwt_cols = paste0("repwt", 1:4),
   id_cols = "sex"
 )
@@ -65,9 +65,9 @@ input_bootstrap_count <- bootstrap_replicates(
 input_bootstrap_hhsize <- bootstrap_replicates(
   data = input_data,
   f = hhsize_by_sex,
-  weight = "weight",
+  wt_col = "weight",
   repwt_cols = paste0("repwt", 1:4),
-  hhsize = "hhsize",
+  hhsize_col = "hhsize",
   id_cols = "sex"
 )
 

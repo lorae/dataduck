@@ -7,7 +7,7 @@
 #' Info on replicate weight standard errors: https://usa.ipums.org/usa/repweight.shtml
 #'
 #' @param data A data frame or a database connection object containing the data to be aggregated.
-#' @param weight A string specifying the name of the column containing the weights.
+#' @param wt_col A string specifying the name of the column containing the weights.
 #' @param group_by A character vector of column names to group by.
 #' @param every_combo Logical, whether to include all combinations of the grouping variables,
 #'   setting counts to zero for combinations not present in the data. Defaults to `FALSE`.
@@ -18,7 +18,7 @@
 #' @export
 crosstab_count <- function(
     data,
-    weight,
+    wt_col,
     group_by,
     every_combo = FALSE
 ) {
@@ -27,7 +27,7 @@ crosstab_count <- function(
   result <- data |>
     group_by(across(all_of(group_by))) |>
     summarize(
-      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      weighted_count = sum(!!sym(wt_col), na.rm = TRUE),
       count = n(),
       .groups = "drop"
     )
@@ -48,7 +48,7 @@ crosstab_count <- function(
 #'
 #' @param data A data frame or a database connection object containing the data to be aggregated.
 #' @param value A string specifying the name of the column containing the values to be averaged.
-#' @param weight A string specifying the name of the column containing the weights.
+#' @param wt_col A string specifying the name of the column containing the weights.
 #' @param group_by A character vector of column names to group by.
 #'
 #' @return A tibble or database connection object containing the group-by columns and weighted mean for each group.
@@ -57,7 +57,7 @@ crosstab_count <- function(
 crosstab_mean <- function(
     data, 
     value, 
-    weight, 
+    wt_col, 
     group_by,
     every_combo = FALSE
 ) {
@@ -65,9 +65,9 @@ crosstab_mean <- function(
     group_by(!!!syms(group_by)) |>
     summarize(
       # Weighted sumproducts
-      weighted_sumprod = sum(!!sym(value) * !!sym(weight), na.rm = TRUE),
+      weighted_sumprod = sum(!!sym(value) * !!sym(wt_col), na.rm = TRUE),
       # Weighted counts
-      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      weighted_count = sum(!!sym(wt_col), na.rm = TRUE),
       count = n(),
       .groups = "drop"
     ) |>
@@ -91,7 +91,7 @@ crosstab_mean <- function(
 #' This function calculates percentages of weighted counts within specified groups.
 #'
 #' @param data A data frame or a database connection object containing the data to be aggregated.
-#' @param weight A string specifying the name of the column containing the weights.
+#' @param wt_col A string specifying the name of the column containing the weights.
 #' @param group_by A character vector of column names to group by for the main counts.
 #' @param percent_group_by A character vector of column names to group by for the percentage calculation.
 #'   All elements of `percent_group_by` must be included in `group_by`.
@@ -101,7 +101,7 @@ crosstab_mean <- function(
 #' @export
 crosstab_percent <- function(
     data, 
-    weight, 
+    wt_col, 
     group_by, 
     percent_group_by,
     every_combo = FALSE
@@ -113,7 +113,7 @@ crosstab_percent <- function(
   result <- data |>
     group_by(!!!syms(group_by)) |>
     summarize(
-      weighted_count = sum(!!sym(weight), na.rm = TRUE),
+      weighted_count = sum(!!sym(wt_col), na.rm = TRUE),
       count = n(),
       .groups = "drop"
     )

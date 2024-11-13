@@ -62,7 +62,7 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   output_tb <- crosstab_mean(
     data = tbl(con, "input"),
     value = "NUMPREC",
-    weight = "PERWT",
+    wt_col = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
     every_combo = FALSE
   ) |> collect()
@@ -91,7 +91,7 @@ test_that("crosstab_mean with estimate_with_boostrap_se produces correct results
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
     f = crosstab_mean,
-    weight = "PERWT",
+    wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("weighted_mean"),
@@ -127,7 +127,7 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   output_tb <- crosstab_mean(
     data = tbl(con, "input"),
     value = "NUMPREC",
-    weight = "PERWT",
+    wt_col = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
     every_combo = TRUE
   ) |> collect()
@@ -156,7 +156,7 @@ test_that("crosstab_mean with estimate_with_boostrap_se produces correct results
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
     f = crosstab_mean,
-    weight = "PERWT",
+    wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("weighted_mean"),
@@ -188,7 +188,7 @@ test_that("crosstab_mean produces correct weighted mean results on tibble with e
   output_tb <- crosstab_mean(
     data = input_tb,
     value = "NUMPREC",
-    weight = "PERWT",
+    wt_col = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
     every_combo = FALSE
   )
@@ -212,7 +212,7 @@ test_that("crosstab_mean with estimate_with_boostrap_se produces correct results
   output_tb <- estimate_with_bootstrap_se(
     data = input_tb,
     f = crosstab_mean,
-    weight = "PERWT",
+    wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("weighted_mean"),
@@ -242,7 +242,7 @@ test_that("crosstab_mean produces correct weighted mean results on tibble with e
   output_tb <- crosstab_mean(
     data = input_tb,
     value = "NUMPREC",
-    weight = "PERWT",
+    wt_col = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
     every_combo = TRUE
   )
@@ -266,7 +266,7 @@ test_that("crosstab_mean with estimate_with_boostrap_se produces correct results
   output_tb <- estimate_with_bootstrap_se(
     data = input_tb,
     f = crosstab_mean,
-    weight = "PERWT",
+    wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("weighted_mean"),

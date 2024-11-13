@@ -4,12 +4,12 @@
 \alias{crosstab_count}
 \title{Calculate Weighted and Unweighted Counts for Groups}
 \usage{
-crosstab_count(data, weight, group_by, every_combo = FALSE)
+crosstab_count(data, wt_col, group_by, every_combo = FALSE)
 }
 \arguments{
 \item{data}{A data frame or a database connection object containing the data to be aggregated.}
 
-\item{weight}{A string specifying the name of the column containing the weights.}
+\item{wt_col}{A string specifying the name of the column containing the weights.}
 
 \item{group_by}{A character vector of column names to group by.}
 

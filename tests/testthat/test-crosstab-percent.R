@@ -60,7 +60,7 @@ test_that("crosstab_percent produces correct percent results on database with ev
   # Compute percentages using DuckDB table
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
-    weight = "PERWT",
+    wt_col = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     percent_group_by = c("AGE_bucket")
   ) |> collect()
@@ -89,7 +89,7 @@ test_that("crosstab_percent with estimate_with_boostrap_se produces correct perc
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
     f = crosstab_percent,
-    weight = "PERWT",
+    wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("percent"),
@@ -125,7 +125,7 @@ test_that("crosstab_percent produces correct percent results on database with ev
   # Compute percentages using DuckDB table
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
-    weight = "PERWT",
+    wt_col = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     percent_group_by = c("AGE_bucket"),
     every_combo = TRUE
@@ -156,7 +156,7 @@ test_that("crosstab_percent with estimate_with_boostrap_se produces correct perc
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
     f = crosstab_percent,
-    weight = "PERWT",
+    wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("percent"),
@@ -192,7 +192,7 @@ test_that("crosstab_percent produces correct percent results on database with ev
   # Compute percentages using DuckDB table
   output_tb <- crosstab_percent(
     data = tbl(con, "input"),
-    weight = "PERWT",
+    wt_col = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     percent_group_by = c("RACE_ETH_bucket")
   ) |> collect()
@@ -221,7 +221,7 @@ test_that("crosstab_percent with estimate_with_boostrap_se produces correct perc
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
     f = crosstab_percent,
-    weight = "PERWT",
+    wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("percent"),
@@ -253,7 +253,7 @@ test_that("crosstab_percent produces correct percent results on tibble with ever
   # Compute percentages on tibble input
   output_tb <- crosstab_percent(
     data = input_tb,
-    weight = "PERWT",
+    wt_col = "PERWT",
     group_by = c("AGE_bucket", "RACE_ETH_bucket"),
     percent_group_by = c("RACE_ETH_bucket")
   )
@@ -277,7 +277,7 @@ test_that("crosstab_percent with estimate_with_boostrap_se produces correct perc
   output_tb <- estimate_with_bootstrap_se(
     data = input_tb,
     f = crosstab_percent,
-    weight = "PERWT",
+    wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("percent"),
