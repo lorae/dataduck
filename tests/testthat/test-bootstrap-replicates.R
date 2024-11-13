@@ -59,7 +59,8 @@ test_that("bootstrap_replicates produces expected main and bootstrapped results 
     f = hhsize_by_sex,
     wt_col = "wt",
     repwt_cols = paste0("repwt", 1:4),
-    hhsize = "hhsize"
+    hhsize = "hhsize",
+    id_cols = "sex"
     )
   
   # Compare results
@@ -90,7 +91,8 @@ test_that("bootstrap_replicates produces expected main and bootstrapped results 
     data = input,
     f = count_by_sex,
     wt_col = "wt",
-    repwt_cols = paste0("repwt", 1:4)
+    repwt_cols = paste0("repwt", 1:4),
+    id_cols = "sex"
   )
   
   # Compare results for count_by_sex

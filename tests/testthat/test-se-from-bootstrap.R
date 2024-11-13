@@ -58,7 +58,8 @@ input_bootstrap_count <- bootstrap_replicates(
   data = input_data,
   f = count_by_sex,
   wt_col = "wt",
-  repwt_cols = paste0("repwt", 1:4)
+  repwt_cols = paste0("repwt", 1:4),
+  id_cols = "sex"
 )
 
 input_bootstrap_hhsize <- bootstrap_replicates(
@@ -66,7 +67,8 @@ input_bootstrap_hhsize <- bootstrap_replicates(
   f = hhsize_by_sex,
   wt_col = "wt",
   repwt_cols = paste0("repwt", 1:4),
-  hhsize = "hhsize"
+  hhsize = "hhsize",
+  id_cols = "sex"
 )
 
 # Expected results

@@ -75,22 +75,11 @@ test_that("estimate_with_bootstrap_se produces correct results for hhsize_by_sex
     repwt_cols = paste0("repwt", 1:4),
     constant = 1,   # Using constant = 1 for simplicity
     se_cols = c("weighted_mean"),
-    hhsize = "hhsize"
+    hhsize = "hhsize",
+    id_cols = "sex"
   )
   
-  # Round decimals to avoid floating point mismatch
-  output_hhsize <- output_hhsize |>
-    mutate(
-      weighted_mean = round(weighted_mean, 4),
-      se_weighted_mean = round(se_weighted_mean, 4)
-    )
-  expected_hhsize <- expected_hhsize |>
-    mutate(
-      weighted_mean = round(weighted_mean, 4),
-      se_weighted_mean = round(se_weighted_mean, 4)
-    )
-  
-  expect_equal(output_hhsize, expected_hhsize)
+  expect_equal(output_hhsize, expected_hhsize, tolerance = 1e-4)
 })
 
 test_that("estimate_with_bootstrap_se produces correct results for count_by_sex", {
@@ -100,33 +89,23 @@ test_that("estimate_with_bootstrap_se produces correct results for count_by_sex"
     wt_col = "wt",
     repwt_cols = paste0("repwt", 1:4),
     constant = 1,   # Using constant = 1 for simplicity
-    se_cols = c("weighted_count", "count")
+    se_cols = c("weighted_count", "count"),
+    id_cols = "sex"
   )
   
-  # Round decimals to avoid floating point mismatch
-  output_count <- output_count |>
-    mutate(
-      se_weighted_count = round(se_weighted_count, 5),
-      se_count = round(se_count, 5)
-    )
-  expected_count <- expected_count |>
-    mutate(
-      se_weighted_count = round(se_weighted_count, 5),
-      se_count = round(se_count, 5)
-    )
-  
-  expect_equal(output_count, expected_count)
+  expect_equal(output_count, expected_count, tolerance = 1e-5)
 })
 
 test_that("estimate_with_bootstrap_se produces correct results for crosstab_count_no_se", {
   output_count <- estimate_with_bootstrap_se(
     data = input_data,
-    f = crosstab_count_no_se,
+    f = crosstab_count,
     wt_col = "wt",
     repwt_cols = paste0("repwt", 1:4),
     constant = 1,   # Using constant = 1 for simplicity
     se_cols = c("weighted_count", "count"),
-    group_by = c("sex")
+    group_by = c("sex"),
+    id_cols = "sex"
   )
   
   # Sort the column order
