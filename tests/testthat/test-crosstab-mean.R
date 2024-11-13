@@ -62,25 +62,21 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   output_tb <- crosstab_mean(
     data = tbl(con, "input"),
     value = "NUMPREC",
-    weight = "PERWT",
+    wt = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
-    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = FALSE
   ) |> collect()
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6),
-           mean_standard_error = round(mean_standard_error, 6)) |>
     arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
   expected_tb <- expected_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6),
-           mean_standard_error = round(mean_standard_error, 6)) |>
-    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
+    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket) |>
+    select(-mean_standard_error)
   
   # Compare results
-  expect_equal(output_tb, expected_tb)
+  expect_equal(output_tb, expected_tb, tolerance = 1e-5)
   
   dbDisconnect(con, shutdown = TRUE)
 })
@@ -94,7 +90,7 @@ test_that("crosstab_mean with estimate_with_boostrap_se produces correct results
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
-    f = crosstab_mean_no_se,
+    f = crosstab_mean,
     wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
@@ -131,25 +127,21 @@ test_that("crosstab_mean produces correct weighted mean results on database with
   output_tb <- crosstab_mean(
     data = tbl(con, "input"),
     value = "NUMPREC",
-    weight = "PERWT",
+    wt = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
-    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = TRUE
   ) |> collect()
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6),
-           mean_standard_error = round(mean_standard_error, 6)) |>
     arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
   expected_combo_tb <- expected_combo_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6),
-           mean_standard_error = round(mean_standard_error, 6)) |>
-    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
+    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket) |>
+    select(-mean_standard_error)
   
   # Compare results
-  expect_equal(output_tb, expected_combo_tb)
+  expect_equal(output_tb, expected_combo_tb, tolerance = 1e-5)
   
   dbDisconnect(con, shutdown = TRUE)
 })
@@ -163,7 +155,7 @@ test_that("crosstab_mean with estimate_with_boostrap_se produces correct results
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
-    f = crosstab_mean_no_se,
+    f = crosstab_mean,
     wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
@@ -196,25 +188,21 @@ test_that("crosstab_mean produces correct weighted mean results on tibble with e
   output_tb <- crosstab_mean(
     data = input_tb,
     value = "NUMPREC",
-    weight = "PERWT",
+    wt = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
-    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = FALSE
   )
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6),
-           mean_standard_error = round(mean_standard_error, 6)) |>
     arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
   
   expected_tb <- expected_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6),
-           mean_standard_error = round(mean_standard_error, 6)) |>
-    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
+    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket) |>
+    select(-mean_standard_error)
   
   # Compare results
-  expect_equal(output_tb, expected_tb)
+  expect_equal(output_tb, expected_tb, tolerance = 1e-5)
 
 })
 
@@ -223,7 +211,7 @@ test_that("crosstab_mean with estimate_with_boostrap_se produces correct results
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- estimate_with_bootstrap_se(
     data = input_tb,
-    f = crosstab_mean_no_se,
+    f = crosstab_mean,
     wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
@@ -254,25 +242,21 @@ test_that("crosstab_mean produces correct weighted mean results on tibble with e
   output_tb <- crosstab_mean(
     data = input_tb,
     value = "NUMPREC",
-    weight = "PERWT",
+    wt = "PERWT",
     group_by = c("HHINCOME_bucket", "AGE_bucket", "RACE_ETH_bucket"),
-    repwts = paste0("REPWTP", sprintf("%d", 1:4)),
     every_combo = TRUE
   )
   
   # Round and arrange output for comparison
   output_tb <- output_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6),
-           mean_standard_error = round(mean_standard_error, 6)) |>
-    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
+    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket) 
   
   expected_combo_tb <- expected_combo_tb |>
-    mutate(weighted_mean = round(weighted_mean, 6),
-           mean_standard_error = round(mean_standard_error, 6)) |>
-    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket)
+    arrange(HHINCOME_bucket, AGE_bucket, RACE_ETH_bucket) |>
+    select(-mean_standard_error)
   
   # Compare results
-  expect_equal(output_tb, expected_combo_tb)
+  expect_equal(output_tb, expected_combo_tb, tolerance = 1e-5)
 
 })
 
@@ -281,7 +265,7 @@ test_that("crosstab_mean with estimate_with_boostrap_se produces correct results
   # Compute weighted and unweighted counts using DuckDB table
   output_tb <- estimate_with_bootstrap_se(
     data = input_tb,
-    f = crosstab_mean_no_se,
+    f = crosstab_mean,
     wt_col = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
