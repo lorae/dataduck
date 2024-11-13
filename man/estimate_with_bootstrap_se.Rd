@@ -7,7 +7,7 @@
 estimate_with_bootstrap_se(
   data,
   f,
-  wt_col = "wt",
+  weight = "weight",
   repwt_cols = paste0("repwt", 1:4),
   constant = 4/80,
   se_cols,
@@ -20,7 +20,7 @@ estimate_with_bootstrap_se(
 \item{f}{A function that produces new columns or summary statistics.
 The function \code{f} must have an argument named \code{weight} to specify the weight column.}
 
-\item{wt_col}{A string indicating the column name to be used as the main weight.
+\item{weight}{A string indicating the column name to be used as the main weight.
 Defaults to \code{"weight"}.}
 
 \item{repwt_cols}{A vector of strings indicating the names of replicate weight

@@ -71,7 +71,7 @@ test_that("estimate_with_bootstrap_se produces correct results for hhsize_by_sex
   output_hhsize <- estimate_with_bootstrap_se(
     data = input_data,
     f = hhsize_by_sex,
-    wt_col = "weight",
+    weight = "weight",
     repwt_cols = paste0("repwt", 1:4),
     constant = 1,   # Using constant = 1 for simplicity
     se_cols = c("weighted_mean"),
@@ -86,7 +86,7 @@ test_that("estimate_with_bootstrap_se produces correct results for count_by_sex"
   output_count <- estimate_with_bootstrap_se(
     data = input_data,
     f = count_by_sex,
-    wt_col = "weight",
+    weight = "weight",
     repwt_cols = paste0("repwt", 1:4),
     constant = 1,   # Using constant = 1 for simplicity
     se_cols = c("weighted_count", "count"),
@@ -100,7 +100,7 @@ test_that("estimate_with_bootstrap_se produces correct results for crosstab_coun
   output_count <- estimate_with_bootstrap_se(
     data = input_data,
     f = crosstab_count,
-    wt_col = "weight",
+    weight = "weight",
     repwt_cols = paste0("repwt", 1:4),
     constant = 1,   # Using constant = 1 for simplicity
     se_cols = c("weighted_count", "count"),

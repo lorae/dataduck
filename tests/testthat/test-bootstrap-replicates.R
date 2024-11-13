@@ -57,7 +57,7 @@ test_that("bootstrap_replicates produces expected main and bootstrapped results 
   output_hhsize <- bootstrap_replicates(
     data = input,
     f = hhsize_by_sex,
-    wt_col = "weight",
+    weight = "weight",
     repwt_cols = paste0("repwt", 1:4),
     hhsize = "hhsize",
     id_cols = "sex"
@@ -90,7 +90,7 @@ test_that("bootstrap_replicates produces expected main and bootstrapped results 
   output_count <- bootstrap_replicates(
     data = input,
     f = count_by_sex,
-    wt_col = "weight",
+    weight = "weight",
     repwt_cols = paste0("repwt", 1:4),
     id_cols = "sex"
   )

@@ -80,7 +80,7 @@ test_that("crosstab_count with estimate_with_boostrap_se produces correct count 
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
     f = crosstab_count,
-    wt_col = "PERWT",
+    weight = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     id_cols = c("AGE_bucket", "RACE_ETH_bucket"),
@@ -145,7 +145,7 @@ test_that("crosstab_count with estimate_with_boostrap_se produces correct count 
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
     f = crosstab_count,
-    wt_col = "PERWT",
+    weight = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     id_cols = c("AGE_bucket", "RACE_ETH_bucket"),
@@ -201,7 +201,7 @@ test_that("crosstab_count with estimate_with_boostrap_se produces correct count 
   output_tb <- estimate_with_bootstrap_se(
     data = input_tb,
     f = crosstab_count,
-    wt_col = "PERWT",
+    weight = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("weighted_count"),
@@ -255,7 +255,7 @@ test_that("crosstab_count with estimate_with_boostrap_se produces correct count 
   output_tb <- estimate_with_bootstrap_se(
     data = input_tb,
     f = crosstab_count,
-    wt_col = "PERWT",
+    weight = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     id_cols = c("AGE_bucket", "RACE_ETH_bucket"),

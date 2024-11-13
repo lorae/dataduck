@@ -8,7 +8,7 @@
 #' @param data A tibble or data frame containing the data to be analyzed.
 #' @param f A function that produces new columns or summary statistics. 
 #'   The function `f` must have an argument named `weight` to specify the weight column.
-#' @param wt_col A string indicating the column name to be used as the main weight.
+#' @param weight A string indicating the column name to be used as the main weight.
 #'   Defaults to `"weight"`.
 #' @param repwt_cols A vector of strings indicating the names of replicate weight 
 #'   columns in `data`. Defaults to `paste0("repwt", 1:80)`.
@@ -23,7 +23,7 @@
 bootstrap_replicates <- function(
     data, 
     f, # function producing new columns for standard errors. Must have an argument that is called "weight"
-    wt_col = "weight", # string name of weight column in `data`
+    weight = "weight", # string name of weight column in `data`
     repwt_cols = paste0("repwt", 1:4), # Vector of strings of replicate weight columns in `data`
     id_cols, # columns that collectively uniquely identify the output observations
     ... # Any additional arguments needed for function f
@@ -34,11 +34,11 @@ bootstrap_replicates <- function(
   
   # Collect the result of the main estimate and sort by id_cols
   main_estimate <- if (is.extra_args) {
-    f(data, weight = wt_col, ...) |> 
+    f(data, weight = weight, ...) |> 
       collect() |> 
       arrange(across(all_of(id_cols)))
   } else {
-    f(data, weight = wt_col) |> 
+    f(data, weight = weight) |> 
       collect() |> 
       arrange(across(all_of(id_cols)))
   }
@@ -128,7 +128,7 @@ se_from_bootstrap <- function(
 #' @param data A tibble or data frame containing the data to be analyzed.
 #' @param f A function that produces new columns or summary statistics. 
 #'   The function `f` must have an argument named `weight` to specify the weight column.
-#' @param wt_col A string indicating the column name to be used as the main weight.
+#' @param weight A string indicating the column name to be used as the main weight.
 #'   Defaults to `"weight"`.
 #' @param repwt_cols A vector of strings indicating the names of replicate weight 
 #'   columns in `data`. Defaults to `paste0("repwt", 1:4)`.
@@ -143,7 +143,7 @@ se_from_bootstrap <- function(
 estimate_with_bootstrap_se <- function(
     data, 
     f,  # Function producing new columns for standard errors. Must have an argument named "weight"
-    wt_col = "weight",  # String name of weight column in `data`
+    weight = "weight",  # String name of weight column in `data`
     repwt_cols = paste0("repwt", 1:4),  # Vector of strings of replicate weight columns in `data`
     constant = 4/80,  # See https://usa.ipums.org/usa/repwt.shtml for more info
     se_cols,  # Vector of string column names to produce standard errors on
@@ -153,7 +153,7 @@ estimate_with_bootstrap_se <- function(
   bootstrap <- bootstrap_replicates(
     data = data,
     f = f,
-    wt_col = wt_col,
+    weight = weight,
     repwt_cols = repwt_cols,
     ...
   )

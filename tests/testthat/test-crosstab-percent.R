@@ -89,7 +89,7 @@ test_that("crosstab_percent with estimate_with_boostrap_se produces correct perc
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
     f = crosstab_percent,
-    wt_col = "PERWT",
+    weight = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("percent"),
@@ -156,7 +156,7 @@ test_that("crosstab_percent with estimate_with_boostrap_se produces correct perc
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
     f = crosstab_percent,
-    wt_col = "PERWT",
+    weight = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("percent"),
@@ -221,7 +221,7 @@ test_that("crosstab_percent with estimate_with_boostrap_se produces correct perc
   output_tb <- estimate_with_bootstrap_se(
     data = tbl(con, "input"),
     f = crosstab_percent,
-    wt_col = "PERWT",
+    weight = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("percent"),
@@ -277,7 +277,7 @@ test_that("crosstab_percent with estimate_with_boostrap_se produces correct perc
   output_tb <- estimate_with_bootstrap_se(
     data = input_tb,
     f = crosstab_percent,
-    wt_col = "PERWT",
+    weight = "PERWT",
     repwt_cols = paste0("REPWTP", sprintf("%d", 1:4)),
     constant = 4/80,
     se_cols = c("percent"),
