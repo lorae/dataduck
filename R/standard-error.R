@@ -26,6 +26,7 @@ bootstrap_replicates <- function(
     wt_col = "weight", # string name of weight column in `data`
     repwt_cols = paste0("repwt", 1:4), # Vector of strings of replicate weight columns in `data`
     id_cols, # columns that collectively uniquely identify the output observations
+    verbose = FALSE, # if true, will print progress updates
     ... # Any additional arguments needed for function f
 ) {
   
@@ -33,6 +34,7 @@ bootstrap_replicates <- function(
   is.extra_args <- (length(extra_args) > 0)
   
   # Collect the result of the main estimate and sort by id_cols
+  if (verbose) { message("📦 Computing main estimate with weights: ", wt_col) }
   main_estimate <- if (is.extra_args) {
     f(data, wt_col = wt_col, ...) |> 
       collect() |> 
@@ -42,15 +44,22 @@ bootstrap_replicates <- function(
       collect() |> 
       arrange(across(all_of(id_cols)))
   }
+  if (verbose) { message("✅ Main estimate complete.") }
   
   # Apply function to replicate weights, collect, and sort by id_cols
-  replicate_estimates <- map(repwt_cols, function(.x) {
+  if (verbose) { message("🔁 Computing replicate estimates (", length(repwt_cols), " replicates)...") }
+  
+  replicate_estimates <- map2(repwt_cols, seq_along(repwt_cols), function(rep_col, i) {
+    # If verbose, print progress update every 10 iterations
+    if (verbose && (i %% 10 == 0 || i == 1)) {
+      message(glue("  → Replicate {i}: using {rep_col}"))
+    }
     if (is.extra_args) {
-      f(data, wt_col = .x, ...) |> 
+      f(data, wt_col = rep_col, ...) |> 
         collect() |> 
         arrange(across(all_of(id_cols)))
     } else {
-      f(data, wt_col = .x) |> 
+      f(data, wt_col = rep_col) |> 
         collect() |> 
         arrange(across(all_of(id_cols)))
     }
@@ -63,8 +72,6 @@ bootstrap_replicates <- function(
   )
 }
 
-
-  
 #' Calculate Standard Errors Using Bootstrapped Replicate Results
 #'
 #' Computes standard errors across specified columns using the output of 
