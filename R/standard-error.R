@@ -54,6 +54,7 @@ bootstrap_replicates_parallel <- function(
     repwt_cols,
     seq_along(repwt_cols),
     function(rep_col, i) {
+      message(glue("🧠 PID {Sys.getpid()} → Starting replicate {i}..."))
       if (verbose && (i %% 10 == 0 || i == 1)) {
         message(glue("  → [Parallel] Replicate {i}: using {rep_col}"))
       }
