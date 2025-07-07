@@ -1,3 +1,80 @@
+#' Parallel Bootstrap Results Using Replicate Weights
+#'
+#' Same as `bootstrap_replicates()` but uses parallel mapping to speed up replicate estimation.
+#' Uses `furrr::future_map2()` and respects the current `future::plan()`.
+#'
+#' @param data A tibble or data frame containing the data to be analyzed.
+#' @param f A function that produces new columns or summary statistics. 
+#'   The function `f` must have an argument named `wt_col` to specify the weight column.
+#' @param wt_col A string indicating the column name to be used as the main weight.
+#' @param repwt_cols A vector of strings indicating the names of replicate weight 
+#'   columns in `data`.
+#' @param id_cols A character vector of columns that uniquely identify rows in the output.
+#' @param verbose If TRUE, prints progress updates.
+#' @param ... Additional arguments passed to the function `f`.
+#'
+#' @return A list with:
+#' \describe{
+#'   \item{main_estimate}{The result of applying `f()` with the main weight column.}
+#'   \item{replicate_estimates}{A list of results from applying `f()` with each 
+#'   replicate weight column (computed in parallel).}
+#' }
+bootstrap_replicates_parallel <- function(
+    data, 
+    f,
+    wt_col = "weight",
+    repwt_cols = paste0("repwt", 1:80),
+    id_cols,
+    verbose = FALSE,
+    ...
+) {
+  # Ensure future is loaded
+  requireNamespace("furrr", quietly = TRUE)
+  
+  extra_args <- list(...)
+  is.extra_args <- (length(extra_args) > 0)
+  
+  # Compute main estimate
+  if (verbose) { message("📦 Computing main estimate with weights: ", wt_col) }
+  main_estimate <- if (is.extra_args) {
+    f(data, wt_col = wt_col, ...) |>
+      collect() |>
+      arrange(across(all_of(id_cols)))
+  } else {
+    f(data, wt_col = wt_col) |>
+      collect() |>
+      arrange(across(all_of(id_cols)))
+  }
+  if (verbose) { message("✅ Main estimate complete.") }
+  
+  # Parallel replicates
+  if (verbose) { message("🚀 Computing replicate estimates in parallel (", length(repwt_cols), " replicates)...") }
+  
+  replicate_estimates <- furrr::future_map2(
+    repwt_cols,
+    seq_along(repwt_cols),
+    function(rep_col, i) {
+      if (verbose && (i %% 10 == 0 || i == 1)) {
+        message(glue("  → [Parallel] Replicate {i}: using {rep_col}"))
+      }
+      if (is.extra_args) {
+        f(data, wt_col = rep_col, ...) |>
+          collect() |>
+          arrange(across(all_of(id_cols)))
+      } else {
+        f(data, wt_col = rep_col) |>
+          collect() |>
+          arrange(across(all_of(id_cols)))
+      }
+    }
+  )
+  
+  list(
+    main_estimate = main_estimate,
+    replicate_estimates = replicate_estimates
+  )
+}
+
 #' Bootstrap Results Using Replicate Weights
 #'
 #' Calculates results of a target function `f()` using a specified weight column,
